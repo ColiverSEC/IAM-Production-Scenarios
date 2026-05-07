@@ -32,7 +32,7 @@ and password spray attacks.
 
 ## 🎯 Scope
 
-- **Affected users:** All 1,066 employees across all departments
+- **Affected users:** All 1,108 employees across all departments
 - **Affected protocols:** SMTP Auth, IMAP, POP3, Basic Authentication
 - **Target:** Block all legacy authentication org-wide within 48 hours
 - **Exception process:** Document and track any legitimate exemptions
