@@ -61,6 +61,8 @@ notifying impacted teams.
   time-limited exceptions requiring change control approval
 - Policy scoped to all users with targeted exclusions only
 
+![CA Policy Flow](./diagrams/ca-policy-flow.png)
+
 ---
 
 ## 🛠️ Implementation
