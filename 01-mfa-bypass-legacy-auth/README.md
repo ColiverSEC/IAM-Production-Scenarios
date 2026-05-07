@@ -81,30 +81,53 @@ using the Sign-in logs and the PowerShell audit script.
 
 📸 *Screenshot: Policy configured in report-only mode*
 
-### Step 3 — Review Report-Only Results
+### Step 3 — Validate Policy with What If Tool
 
-📸 *Screenshot: Sign-in logs showing report-only policy impact*
+Prior to enforcement, the What If tool was used to simulate legacy auth 
+sign-in scenarios and confirm the policy would block as expected.
+
+📸 Screenshot: What If results showing policy would block legacy auth
+📸 Screenshot: What If results for Other clients — would block
 
 ### Step 4 — Switch Policy to Enabled
 
-📸 *Screenshot: Policy enabled and confirmed in policy list*
+📸 Screenshot: Policy enabled
 
-### Step 5 — Verify Enforcement
+### Step 5 — Post-Enforcement Validation
 
-📸 *Screenshot: Sign-in logs confirming legacy auth blocked*
+What If tool confirmed policy enforcing block on all legacy auth 
+client types. Audit script re-run confirmed zero legacy auth 
+sign-ins post-enforcement.
+
+📸 Screenshot: What If results under enforced policy
+📸 Screenshot: Post-enforcement audit script output
 
 ---
 
 ## ✅ Outcome
 
-- Legacy authentication blocked org-wide within 48-hour window
-- Zero successful legacy auth sign-ins post-enforcement
-- 2 exemptions granted via change control for legacy line-of-business 
-  applications — tracked in GRP-SEC-LegacyAuthExempt with 30-day review
-- Sign-in logs confirmed MFA now enforced on 100% of authentication 
-  attempts
+- Conditional Access policy deployed in report-only mode for validation
+- What If tool confirmed policy would block all legacy authentication 
+  attempts across Exchange ActiveSync and Other client types before 
+  enforcement
+- Policy switched to enabled — legacy authentication now blocked org-wide
+- Post-enforcement audit script detected 1 legacy auth attempt via 
+  Authenticated SMTP from a privileged account during policy testing
+- Account flagged, temporarily added to GRP-SEC-LegacyAuthExempt with 
+  30-day review window pending mail client reconfiguration to modern auth
+- Audit script exported full CSV report for compliance documentation
+- Zero unauthorized legacy auth attempts detected post-enforcement
 
----
+## 📊 Audit Results
+
+| Metric | Value |
+|--------|-------|
+| Audit period | 7 days |
+| Total sign-in events | 495 |
+| Legacy auth attempts detected | 1 |
+| Unique users flagged | 1 |
+| Protocol | Authenticated SMTP |
+| Result | Detected and flagged — exemption granted pending remediation |
 
 ## 📁 Files
 
