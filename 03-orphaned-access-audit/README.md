@@ -80,7 +80,9 @@ Disabled accounts were removed from all AD group memberships via
 PowerShell. Dynamic group rules were updated to exclude disabled 
 accounts using `user.accountEnabled -eq true` condition.
 
-![Disabled Account Remediated](./screenshots/03-disabled-account-remediated.png)
+![Disabled Account Remediated via Powershell](./screenshots/03a-disabled-account-remediated.png)
+
+![Disabled Account Remediated via GUI](./screenshots/03b-disabled-account-remediated.png)
 
 ### Step 4 — Update Dynamic Group Rules
 Dynamic membership rules updated to explicitly exclude disabled 
