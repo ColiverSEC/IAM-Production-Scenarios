@@ -22,7 +22,7 @@ Each scenario includes a business problem, solution design, implementation, and 
 
 | # | Scenario | Problem Solved | Key Skills |
 |---|----------|----------------|------------|
-| 01 | [MFA Bypass via Legacy Auth](./01-mfa-bypass-legacy-auth/) | Legacy protocols bypassing MFA controls org-wide | Conditional Access, Sign-in Logs, Block Legacy Auth |
+| 01 | [MFA Bypass via Legacy Auth](./01-mfa-bypass-legacy-auth/) | Legacy protocols bypassing MFA controls org-wide | Conditional Access, Sign-in Logs, What-If, Block Legacy Auth |
 | 02 | [App Migration: Legacy IdP → Okta](./02-app-migration-okta/) | M&A requires migrating apps off legacy SSO | SAML, Okta, Attribute Mapping, Cutover Planning |
 | 03 | [Orphaned Access Audit](./03-orphaned-access-audit/) | Audit found stale users retaining access post-offboarding | Graph API, PowerShell, Access Governance |
 | 04 | [Zero Trust Rollout](./04-zero-trust-rollout/) | Executive mandate to implement Zero Trust for 500-person org | CA Policies, PIM, Compliant Devices, Terraform |
