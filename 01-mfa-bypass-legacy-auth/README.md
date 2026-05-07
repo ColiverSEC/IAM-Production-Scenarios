@@ -75,23 +75,24 @@ notifying impacted teams.
 Before deploying the policy, baseline the current legacy auth volume 
 using the Sign-in logs and the PowerShell audit script.
 
-📸 *Screenshot: Sign-in logs filtered by legacy auth clients*
+![Baseline Audit](./screenshots/01-baseline-audit.png)
 
 ### Step 2 — Deploy Policy in Report-Only Mode
 
-📸 *Screenshot: Policy configured in report-only mode*
+![Policy Report Only Config](./screenshots/02-policy-report-only-config.png)
+![Policy Report Only Confirmed](./screenshots/03-policy-report-only-confirmed.png)
 
 ### Step 3 — Validate Policy with What If Tool
 
 Prior to enforcement, the What If tool was used to simulate legacy auth 
 sign-in scenarios and confirm the policy would block as expected.
 
-📸 Screenshot: What If results showing policy would block legacy auth
-📸 Screenshot: What If results for Other clients — would block
+![What If Would Block](./screenshots/04-whatif-would-block.png)
+![What If Other Clients](./screenshots/04b-whatif-other-clients.png)
 
 ### Step 4 — Switch Policy to Enabled
 
-📸 Screenshot: Policy enabled
+![Policy Enabled](./screenshots/05-policy-enabled.png)
 
 ### Step 5 — Post-Enforcement Validation
 
@@ -99,8 +100,8 @@ What If tool confirmed policy enforcing block on all legacy auth
 client types. Audit script re-run confirmed zero legacy auth 
 sign-ins post-enforcement.
 
-📸 Screenshot: What If results under enforced policy
-📸 Screenshot: Post-enforcement audit script output
+![What If Enforced Block](./screenshots/06-whatif-enforced-block.png)
+![Post Enforcement Audit](./screenshots/07-post-enforcement-audit.png)
 
 ---
 
