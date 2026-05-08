@@ -48,6 +48,8 @@ detection of four categories of orphaned access:
 The script exports a full CSV report for compliance documentation and 
 produces a remediation priority list for the IAM team.
 
+![Orphaned Access Flow](./diagrams/orphaned-access-flow.png)
+
 ### ⚠️ Hybrid Identity Consideration
 
 Group ownership for AD-synced groups cannot be set directly in Entra ID 
