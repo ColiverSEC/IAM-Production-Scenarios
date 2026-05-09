@@ -74,7 +74,9 @@ Security department IAM Engineer (wking) activates Security Administrator
 via PIM with MFA verification and business justification required.
 
 ![PIM Access Request](./screenshots/03a-pim-access-request.png)
-<br>
+
+---
+
 ![PIM Role Activated](./screenshots/03b-pim-role-activated.png)
 
 ---
