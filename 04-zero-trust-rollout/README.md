@@ -74,6 +74,7 @@ Security department IAM Engineer (wking) activates Security Administrator
 via PIM with MFA verification and business justification required.
 
 ![PIM Access Request](./screenshots/03a-pim-access-request.png)
+<br>
 ![PIM Role Activated](./screenshots/03b-pim-role-activated.png)
 
 ---
@@ -110,6 +111,10 @@ via PIM with MFA verification and business justification required.
 
 ---
 
+### Workstream Validation — Zero Trust Posture Check
+
+![Zero Trust Validation](./screenshots/12-zero-trust-validation.png)
+
 ## ✅ Outcome
 
 - All privileged roles converted to PIM eligible — zero permanent admin assignments outside of break-glass accounts
@@ -129,6 +134,7 @@ via PIM with MFA verification and business justification required.
 | `terraform/variables.tf` | Variable definitions |
 | `terraform/outputs.tf` | Output values |
 | `diagrams/zero-trust-architecture.png` | Zero Trust architecture diagram |
+| `scripts/Validate-ZeroTrustPosture.ps1` | Validates CA policies and PIM assignments are correctly configured |
 | `screenshots/` | Evidence of implementation |
 
 ---
