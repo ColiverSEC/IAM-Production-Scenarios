@@ -68,8 +68,13 @@ auditable, version-controlled deployment.
 #### Step 2 — Configure Activation Requirements
 ![PIM Activation Settings](./screenshots/02-pim-activation-settings.png)
 
-#### Step 3 — Test JIT Access Request
-![PIM Access Request](./screenshots/03-pim-access-request.png)
+#### Step 3 — Test JIT Access Request (End User Perspective)
+
+Security department IAM Engineer (wking) activates Security Administrator 
+via PIM with MFA verification and business justification required.
+
+![PIM Access Request](./screenshots/03a-pim-access-request.png)
+![PIM Role Activated](./screenshots/03b-pim-role-activated.png)
 
 ---
 
@@ -81,11 +86,11 @@ auditable, version-controlled deployment.
 #### Policy 2 — Block High Risk Sign-ins
 ![CA Policy Block Risky](./screenshots/05-ca-block-risky-signins.png)
 
-#### Policy 3 — Require Compliant Device for Sensitive Apps
-![CA Policy Device Compliance](./screenshots/06-ca-device-compliance.png)
+#### Policy 3 — Restrict Admin Portal Access
+![CA Policy Admin Portals](./screenshots/06-ca-admin-portals.png)
 
-#### Policy 4 — Restrict Admin Portal Access
-![CA Policy Admin Portals](./screenshots/07-ca-admin-portals.png)
+#### Policy Suite Overview
+![CA Policy List](./screenshots/07-ca-policy-list-overview.png)
 
 ---
 
@@ -95,25 +100,24 @@ auditable, version-controlled deployment.
 ![Terraform Init](./screenshots/08-terraform-init.png)
 
 #### Step 2 — Define CA Policies as Code
-![Terraform Plan](./screenshots/09-terraform-plan.png)
+![Terraform Plan Top](./screenshots/09a-terraform-plan-top.png)
+![Terraform Plan Middle](./screenshots/09b-terraform-plan-top.png)
+![Terraform Plan Bottom](./screenshots/09c-terraform-plan-bottom.png)
 
 #### Step 3 — Apply Infrastructure
 ![Terraform Apply](./screenshots/10-terraform-apply.png)
+![Terraform Policies in Entra](./screenshots/11-terraform-policies-in-entra.png)
 
 ---
 
 ## ✅ Outcome
 
-- All privileged roles converted to PIM eligible — zero permanent admin 
-  assignments outside of break-glass accounts
-- PIM activation requires MFA, business justification, and is limited 
-  to 1-hour windows with full audit logging
-- 4 Conditional Access policies deployed covering MFA, risk-based 
-  access, device compliance, and admin portal restrictions
-- CA policies defined as Terraform code — fully version controlled 
-  and repeatable
-- Zero Trust posture validated via What If tool across all user 
-  and device scenarios
+- All privileged roles converted to PIM eligible — zero permanent admin assignments outside of break-glass accounts
+- PIM activation requires MFA, business justification, and is limited to 1-hour windows with full audit logging
+- 4 Conditional Access policies deployed covering MFA enforcement, risk-based sign-in blocking, admin portal access restriction, and legacy authentication blocking
+- CA policies defined as Terraform code — fully version controlled and repeatable
+- Zero Trust posture validated — all four CA policies confirmed active 
+  and enforced in Entra admin center
 
 ---
 
