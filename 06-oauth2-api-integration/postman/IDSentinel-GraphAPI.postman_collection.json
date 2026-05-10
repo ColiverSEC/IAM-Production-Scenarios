@@ -1,0 +1,239 @@
+{
+  "info": {
+    "_postman_id": "7378b2e0-006c-4a70-9266-4b300c86120a",
+    "name": "IDSentinel - Graph API Reporter",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54516889",
+    "_collection_link": "https://go.postman.co/collection/54516889-7378b2e0-006c-4a70-9266-4b300c86120a?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01 - Get Access Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();\r",
+              "pm.collectionVariables.set(\"accessToken\", jsonData.access_token);\r",
+              "pm.test(\"Token received successfully\", function() {\r",
+              "    pm.response.to.have.status(200);\r",
+              "    pm.expect(jsonData.token_type).to.equal(\"Bearer\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "grant_type",
+              "value": "client_credentials",
+              "type": "text",
+              "uuid": "2ca8c09b-2eaa-4b0a-a80d-333d819ca25b"
+            },
+            {
+              "key": "client_id",
+              "value": "{{clientId}}",
+              "type": "text",
+              "uuid": "2fd6c747-273b-463e-b999-e60f1705f14c"
+            },
+            {
+              "key": "client_secret",
+              "value": "{{clientSecret}}",
+              "type": "text",
+              "uuid": "43bb88a9-536e-42e9-ac71-a96311596b52"
+            },
+            {
+              "key": "scope",
+              "value": "https://graph.microsoft.com/.default",
+              "type": "text",
+              "uuid": "5f88ead8-8f4b-4e11-ad04-d16d5b1de409"
+            }
+          ]
+        },
+        "url": {
+          "raw": "https://login.microsoftonline.com/{{tenantId}}/oauth2/v2.0/token",
+          "protocol": "https",
+          "host": [
+            "login",
+            "microsoftonline",
+            "com"
+          ],
+          "path": [
+             "{{tenantId}}",
+            "oauth2",
+            "v2.0",
+            "token"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "02 - Get Users Without MFA",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://graph.microsoft.com/beta/reports/credentialUserRegistrationDetails",
+          "protocol": "https",
+          "host": [
+            "graph",
+            "microsoft",
+            "com"
+          ],
+          "path": [
+            "beta",
+            "reports",
+            "credentialUserRegistrationDetails"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "03 - Get Guest Accounts",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://graph.microsoft.com/v1.0/users?$filter=userType eq 'Guest'&$select=displayName,userPrincipalName,createdDateTime,signInActivity",
+          "protocol": "https",
+          "host": [
+            "graph",
+            "microsoft",
+            "com"
+          ],
+          "path": [
+            "v1.0",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "$filter",
+              "value": "userType eq 'Guest'"
+            },
+            {
+              "key": "$select",
+              "value": "displayName,userPrincipalName,createdDateTime,signInActivity"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "04 - Get Risky Sign-ins",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://graph.microsoft.com/v1.0/identityProtection/riskyUsers",
+          "protocol": "https",
+          "host": [
+            "graph",
+            "microsoft",
+            "com"
+          ],
+          "path": [
+            "v1.0",
+            "identityProtection",
+            "riskyUsers"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "tenantId",
+      "value": ""
+    },
+    {
+      "key": "clientId",
+      "value": ""
+    },
+    {
+      "key": "clientSecret",
+      "value": ""
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    }
+  ]
+}
