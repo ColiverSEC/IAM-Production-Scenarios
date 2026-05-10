@@ -54,27 +54,27 @@ making it suitable for automated/scheduled execution.
 
 ### Step 1 — Create App Registration in Entra ID
 ![App Registration](./screenshots/01-app-registration.png)
+
+---
+
 ![API Permissions](./screenshots/02-api-permissions.png)
+
+---
+
 ![Client Secret](./screenshots/03-client-secret.png)
 
 ---
 
 ### Step 2 — Test OAuth2 Token Request in Postman
 ![Postman Token Request](./screenshots/04-postman-token-request.png)
+
+---
+
 ![Postman Token Response](./screenshots/05-postman-token-response.png)
 
 ---
 
 ### Step 3 — Call Graph API Endpoints in Postman
-
-#### Request 1 — OAuth2 Token Request
-![Postman Token Request](./screenshots/04-postman-token-request.png)
-
----
-
-![Postman Token Response](./screenshots/05-postman-token-response.png)
-
----
 
 #### Request 2 — MFA Registration Report
 Endpoint: `GET https://graph.microsoft.com/beta/reports/credentialUserRegistrationDetails`
@@ -99,12 +99,11 @@ for stale account identification.
 #### Request 4 — Risky Users Report
 Endpoint: `GET https://graph.microsoft.com/v1.0/identityProtection/riskyUsers`
 
-Returns users currently flagged by Entra Identity Protection. Empty array 
-response confirms API connectivity and `IdentityRiskyUser.Read.All` 
-permission is correctly configured. In a production environment this 
-endpoint surfaces users requiring immediate investigation.
+Returns users flagged by Entra Identity Protection. Empty array confirms 
+API connectivity and permissions are correctly configured.
 
 ![Postman Risky Users](./screenshots/08-postman-risky-users.png)
+
 ---
 
 ### Step 4 — Python Automation Script
