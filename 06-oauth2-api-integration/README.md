@@ -66,14 +66,50 @@ making it suitable for automated/scheduled execution.
 ---
 
 ### Step 3 — Call Graph API Endpoints in Postman
+
+#### Request 1 — OAuth2 Token Request
+![Postman Token Request](./screenshots/04-postman-token-request.png)
+
+---
+
+![Postman Token Response](./screenshots/05-postman-token-response.png)
+
+---
+
+#### Request 2 — MFA Registration Report
+Endpoint: `GET https://graph.microsoft.com/beta/reports/credentialUserRegistrationDetails`
+
+Returns all users with their MFA registration status — identifying accounts 
+without MFA registered for remediation.
+
 ![Postman MFA Report](./screenshots/06-postman-mfa-report.png)
+
+---
+
+#### Request 3 — Guest Account Inventory
+Endpoint: `GET https://graph.microsoft.com/v1.0/users?$filter=userType eq 'Guest'`
+
+Returns all guest accounts with creation date and last sign-in activity 
+for stale account identification.
+
 ![Postman Guest Report](./screenshots/07-postman-guest-report.png)
 
 ---
 
+#### Request 4 — Risky Users Report
+Endpoint: `GET https://graph.microsoft.com/v1.0/identityProtection/riskyUsers`
+
+Returns users currently flagged by Entra Identity Protection. Empty array 
+response confirms API connectivity and `IdentityRiskyUser.Read.All` 
+permission is correctly configured. In a production environment this 
+endpoint surfaces users requiring immediate investigation.
+
+![Postman Risky Users](./screenshots/08-postman-risky-users.png)
+---
+
 ### Step 4 — Python Automation Script
-![Python Script Output](./screenshots/08-python-script-output.png)
-![CSV Reports Generated](./screenshots/09-csv-reports-generated.png)
+![Python Script Output](./screenshots/09-python-script-output.png)
+![CSV Reports Generated](./screenshots/10-csv-reports-generated.png)
 
 ---
 
@@ -93,7 +129,7 @@ making it suitable for automated/scheduled execution.
 | File | Description |
 |------|-------------|
 | `scripts/Get-IdentityRiskReport.py` | Python script — OAuth2 auth + all three reports |
-| `postman/IDSentinel-GraphAPI.postman_collection.json` | Postman collection with all API calls |
+| `postman/IDSentinel-GraphAPI.postman_collection.json` | Postman collection with 4 API requests |
 | `diagrams/oauth2-flow.png` | OAuth2 client credentials flow diagram |
 | `screenshots/` | Evidence of implementation |
 
