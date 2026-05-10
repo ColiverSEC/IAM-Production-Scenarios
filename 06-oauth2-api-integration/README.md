@@ -108,8 +108,14 @@ API connectivity and permissions are correctly configured.
 
 ### Step 4 — Python Automation Script
 ![Python Script Output](./screenshots/09-python-script-output.png)
+
+---
+
 ![CSV Reports Generated](./screenshots/10-csv-reports-generated.png)
 
+---
+
+![CSV Report Contents](./screenshots/10b-csv-report-contents.png)
 ---
 
 ## ✅ Outcome
