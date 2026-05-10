@@ -120,11 +120,8 @@ API connectivity and permissions are correctly configured.
 - Reports exported as timestamped CSV files for compliance documentation
 - Manual reporting time reduced from 4-6 hours to under 5 minutes
 - Solution is schedulable via Task Scheduler for fully automated execution
-- MFA audit revealed 1,096 of 1,103 users lack MFA registration — 
-  consistent with a newly onboarded organization that has not yet 
-  completed MFA rollout. Finding escalated to trigger the Zero Trust 
-  Rollout project (Scenario 04) where MFA enforcement was implemented 
-  via Conditional Access policy.
+- MFA audit detected 1,096 users without MFA registration — finding 
+  directly informed the Zero Trust Rollout in Scenario 04
 
 ---
 
