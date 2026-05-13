@@ -70,7 +70,11 @@ Tor Browser was used to authenticate as test user `wking@IDSentinelSolutions.com
 through a Tor exit node. Entra Identity Protection classifies this as an
 **anonymizedIPAddress** risk event.
 
-![Tor Browser Sign-In](./screenshots/01-tor-signin.png)
+![Tor Browser Sign-In](./screenshots/01a-tor-signin.png)
+
+---
+
+![Tor Browser Sign-In](./screenshots/01b-tor-signin.png)
 
 ---
 
