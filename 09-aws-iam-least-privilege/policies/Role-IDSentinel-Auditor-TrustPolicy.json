@@ -1,0 +1,18 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowServiceUserAssumption",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::635649352714:user/svc-idsentinel-reporter"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "IDSentinel-Lab-2026"
+        }
+      }
+    }
+  ]
+}

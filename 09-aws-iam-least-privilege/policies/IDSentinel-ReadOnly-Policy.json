@@ -1,0 +1,40 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadOnlyIAM",
+      "Effect": "Allow",
+      "Action": [
+        "iam:Get*",
+        "iam:List*",
+        "iam:GenerateCredentialReport",
+        "iam:GenerateServiceLastAccessedDetails"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyIAMWrite",
+      "Effect": "Deny",
+      "Action": [
+        "iam:Create*",
+        "iam:Delete*",
+        "iam:Update*",
+        "iam:Attach*",
+        "iam:Detach*",
+        "iam:Put*",
+        "iam:Add*",
+        "iam:Remove*",
+        "iam:Set*",
+        "iam:Tag*",
+        "iam:Untag*",
+        "iam:Upload*",
+        "iam:Enable*",
+        "iam:Deactivate*",
+        "iam:Reset*",
+        "iam:Resync*",
+        "iam:Pass*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
