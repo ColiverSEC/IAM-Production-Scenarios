@@ -1,0 +1,107 @@
+| =========================================================================
+| D-03-After-Hours-PIM.spl
+| IDSentinel Solutions — Identity Threat Detection Library
+| Scenario 10 — Identity Threat Detection Pipeline
+|
+| Description:
+|   Detects privileged role activations via PIM that occur outside of
+|   defined business hours (10pm–6am local time, UTC-5 approximation).
+|
+|   Legitimate administrators rarely need privileged access in the
+|   middle of the night. After-hours PIM activations are a high-fidelity
+|   indicator of compromised admin credentials or an insider threat
+|   actor operating outside of SOC monitoring coverage.
+|
+| Severity    : MEDIUM
+| Schedule    : Every 60 minutes
+| Trigger     : Number of results > 0
+| Response    : INC-TYPE-001 — Identity Risk Response Runbook (Scenario 07)
+| MITRE ATT&CK: T1078.004 — Valid Accounts: Cloud Accounts
+| SOC 2       : CC7.1
+|
+| Tuning note : Adjust UTC_OFFSET_HOURS to match your org's timezone.
+|               Document any known after-hours maintenance windows in
+|               docs/detection-tuning-guide.md and suppress by user
+|               group for approved on-call staff if needed.
+| =========================================================================
+
+| -------------------------------------------------------------------------
+| CONFIGURATION — adjust UTC offset for your local timezone
+| -------------------------------------------------------------------------
+| eval UTC_OFFSET_HOURS = -5   | ET (UTC-5). Change to match your timezone.
+| -------------------------------------------------------------------------
+
+index="idsentinel_identity" sourcetype="azure:monitor:aad:audit"
+    earliest=-60m latest=now
+
+| eval event_time_utc = strptime(activityDateTime, "%Y-%m-%dT%H:%M:%SZ")
+
+| where
+    (
+        match(lower(activityDisplayName), "add member to role") OR
+        match(lower(activityDisplayName), "pim activation")     OR
+        (category = "RoleManagement" AND operationType = "Assign")
+    )
+    AND result = "success"
+    AND loggedByService = "PIM"
+
+| eval
+    local_epoch   = event_time_utc + (-5 * 3600),
+    local_hour    = tonumber(strftime(local_epoch, "%H")),
+    is_afterhours = if(local_hour >= 22 OR local_hour < 6, "YES", "NO")
+
+| where is_afterhours = "YES"
+
+| spath input=initiatedBy path=user.userPrincipalName output=activated_by_upn
+| spath input=initiatedBy path=user.displayName       output=activated_by_name
+
+| mvexpand targetResources
+| spath input=targetResources path=displayName output=role_name
+| spath input=targetResources path=type        output=resource_type
+
+| where resource_type = "Role"
+
+| eval
+    event_time_str    = strftime(event_time_utc, "%Y-%m-%d %H:%M:%S UTC"),
+    local_time_str    = strftime(local_epoch,    "%Y-%m-%d %H:%M:%S ET"),
+    severity          = "MEDIUM",
+    mitre_technique   = "T1078.004 - Valid Accounts: Cloud Accounts",
+    response_runbook  = "INC-TYPE-001 — Invoke-IdentityRiskContainment.ps1",
+    response_sla      = "Review within 60 minutes",
+    soc2_controls     = "CC7.1",
+    recommended_action = "1. Confirm with the user whether the activation was intentional. " .
+                         "2. If unconfirmed — check PIM audit trail for justification text. " .
+                         "3. Review sign-in logs for the activating account around the same time. " .
+                         "4. If suspicious — disable account and escalate to P1."
+
+| table
+    event_time_str,
+    local_time_str,
+    local_hour,
+    activated_by_upn,
+    activated_by_name,
+    role_name,
+    correlationId,
+    severity,
+    mitre_technique,
+    response_sla,
+    recommended_action,
+    response_runbook,
+    soc2_controls
+
+| sort -event_time_str
+
+| rename
+    event_time_str     AS "Activation Time (UTC)",
+    local_time_str     AS "Activation Time (Local)",
+    local_hour         AS "Local Hour",
+    activated_by_upn   AS "Activated By (UPN)",
+    activated_by_name  AS "Activated By (Name)",
+    role_name          AS "Role Activated",
+    correlationId      AS "Correlation ID",
+    severity           AS "Severity",
+    mitre_technique    AS "MITRE ATT&CK",
+    response_sla       AS "Response SLA",
+    recommended_action AS "Recommended Action",
+    response_runbook   AS "Runbook",
+    soc2_controls      AS "SOC 2 Controls"

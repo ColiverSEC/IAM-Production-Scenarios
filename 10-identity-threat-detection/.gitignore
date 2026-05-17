@@ -1,0 +1,21 @@
+﻿# Python runtime files
+__pycache__/
+*.pyc
+*.pyo
+
+# State file — contains timestamps, not credentials, but keep local
+last_run.json
+
+# Credential files — NEVER commit these
+*.env
+.env
+credentials.json
+secrets.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

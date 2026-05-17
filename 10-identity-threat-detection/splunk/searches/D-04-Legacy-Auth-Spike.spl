@@ -1,0 +1,140 @@
+| =========================================================================
+| D-04-Legacy-Auth-Spike.spl
+| IDSentinel Solutions — Identity Threat Detection Library
+| Scenario 10 — Identity Threat Detection Pipeline
+|
+| Description:
+|   Detects a spike in legacy authentication attempts within a rolling
+|   60-minute window. After the Scenario 01 CA policy blocked legacy
+|   auth org-wide, any spike in attempts indicates either:
+|     (a) A misconfigured client trying to bypass modern auth controls
+|     (b) An active password spray attack targeting legacy endpoints
+|         (SMTP, IMAP, MAPI — which bypass MFA if not blocked)
+|
+|   Note: This detection is most valuable POST-enforcement of the
+|   Scenario 01 block policy. Pre-enforcement, tune the threshold
+|   higher or filter by CA policy result = "blocked".
+|
+| Severity    : HIGH
+| Schedule    : Every 15 minutes
+| Trigger     : Number of results > 0
+| Response    : INC-TYPE-001 — Identity Risk Response Runbook (Scenario 07)
+| MITRE ATT&CK: T1110.003 — Password Spraying; T1078 — Valid Accounts
+| SOC 2       : CC7.1, CC7.2
+|
+| Tuning note : Adjust SPIKE_THRESHOLD to match your baseline. Start at
+|               10 and tune down once you understand your org's noise floor.
+|               Filter known legitimate SMTP relay IPs via exclusion list.
+| =========================================================================
+
+index="idsentinel_identity" sourcetype="azure:monitor:aad:signin"
+    earliest=-60m latest=now
+
+| eval event_time = strptime(createdDateTime, "%Y-%m-%dT%H:%M:%SZ")
+
+| -------------------------------------------------------------------------
+| Filter for legacy authentication protocols
+| -------------------------------------------------------------------------
+| where clientAppUsed IN (
+    "Exchange ActiveSync",
+    "IMAP",
+    "MAPI",
+    "POP3",
+    "SMTP",
+    "Other clients",
+    "Authenticated SMTP",
+    "Autodiscover",
+    "Exchange Online PowerShell",
+    "Exchange Web Services",
+    "Legacy Authentication Clients"
+  )
+
+| -------------------------------------------------------------------------
+| Enrich: mark CA blocked vs slipped through
+| -------------------------------------------------------------------------
+| eval
+    ca_blocked         = if(conditionalAccessStatus = "failure", "YES", "NO"),
+    auth_result        = if('status.errorCode' = 0, "SUCCESS", "FAILURE"),
+    is_high_risk_result = if(auth_result = "SUCCESS" AND ca_blocked = "NO",
+                             "CRITICAL — bypassed controls", "Blocked or failed")
+
+| -------------------------------------------------------------------------
+| Aggregate by source IP to surface spray patterns
+| -------------------------------------------------------------------------
+| stats
+    count                             AS total_legacy_attempts,
+    dc(userPrincipalName)             AS unique_users_targeted,
+    sum(eval(if(auth_result="SUCCESS",1,0)))     AS successful_auths,
+    sum(eval(if(ca_blocked="YES",1,0)))          AS ca_blocked_count,
+    values(clientAppUsed)             AS protocols_used,
+    values(userPrincipalName)         AS users_targeted,
+    earliest(event_time)              AS first_attempt_epoch,
+    latest(event_time)                AS last_attempt_epoch,
+    values('status.errorCode')        AS error_codes
+    BY ipAddress, 'location.countryOrRegion', 'location.city'
+
+| where total_legacy_attempts > 10
+
+| eval
+    first_attempt     = strftime(first_attempt_epoch, "%Y-%m-%d %H:%M:%S UTC"),
+    last_attempt      = strftime(last_attempt_epoch,  "%Y-%m-%d %H:%M:%S UTC"),
+    window_minutes    = round((last_attempt_epoch - first_attempt_epoch) / 60, 1),
+    risk_level        = case(
+        successful_auths > 0 AND ca_blocked_count = 0, "CRITICAL — auth succeeded, not blocked",
+        successful_auths > 0,                           "HIGH — auth succeeded (may have been blocked after)",
+        ca_blocked_count = total_legacy_attempts,       "LOW — all blocked by CA policy",
+        true(),                                         "MEDIUM — mix of blocked and unblocked"
+    ),
+    severity          = "HIGH",
+    mitre_technique   = "T1110.003 - Password Spraying / T1078 - Valid Accounts",
+    response_runbook  = "INC-TYPE-001 — Invoke-IdentityRiskContainment.ps1",
+    response_sla      = "Investigate within 15 minutes",
+    soc2_controls     = "CC7.1, CC7.2",
+    recommended_action = "1. Block source IP in Entra Named Locations immediately. " .
+                         "2. Check if any auth succeeded without CA block — those users need immediate containment. " .
+                         "3. Confirm CA policy from Scenario 01 is still enforcing correctly. " .
+                         "4. Correlate source IP against threat intel feeds."
+
+| table
+    ipAddress,
+    'location.city',
+    'location.countryOrRegion',
+    total_legacy_attempts,
+    unique_users_targeted,
+    successful_auths,
+    ca_blocked_count,
+    risk_level,
+    protocols_used,
+    first_attempt,
+    last_attempt,
+    window_minutes,
+    error_codes,
+    severity,
+    mitre_technique,
+    response_sla,
+    recommended_action,
+    response_runbook,
+    soc2_controls
+
+| sort -total_legacy_attempts
+
+| rename
+    ipAddress                  AS "Source IP",
+    'location.city'            AS "City",
+    'location.countryOrRegion' AS "Country",
+    total_legacy_attempts      AS "Total Attempts (60min)",
+    unique_users_targeted      AS "Unique Users Targeted",
+    successful_auths           AS "Successful Auths",
+    ca_blocked_count           AS "CA Blocked Count",
+    risk_level                 AS "Risk Assessment",
+    protocols_used             AS "Protocols Used",
+    first_attempt              AS "First Attempt",
+    last_attempt               AS "Last Attempt",
+    window_minutes             AS "Window (minutes)",
+    error_codes                AS "Error Codes",
+    severity                   AS "Severity",
+    mitre_technique            AS "MITRE ATT&CK",
+    response_sla               AS "Response SLA",
+    recommended_action         AS "Recommended Action",
+    response_runbook           AS "Runbook",
+    soc2_controls              AS "SOC 2 Controls"

@@ -1,0 +1,97 @@
+| =========================================================================
+| D-01-MFA-Fatigue.spl
+| IDSentinel Solutions — Identity Threat Detection Library
+| Scenario 10 — Identity Threat Detection Pipeline
+|
+| Description:
+|   Detects MFA fatigue attacks by identifying users with more than 5
+|   MFA push denial events within a rolling 60-minute window.
+|
+|   MFA fatigue (T1621) is a social engineering technique where an
+|   adversary repeatedly triggers MFA push notifications, hoping the
+|   user approves out of frustration or distraction.
+|
+| Severity    : HIGH
+| Schedule    : Every 15 minutes
+| Trigger     : Number of results > 0
+| Response    : INC-TYPE-001 — Identity Risk Response Runbook (Scenario 07)
+| MITRE ATT&CK: T1621 — Multi-Factor Authentication Request Generation
+| SOC 2       : CC7.1, CC7.2
+| =========================================================================
+
+index="idsentinel_identity" sourcetype="azure:monitor:aad:signin"
+    earliest=-60m latest=now
+
+| eval event_time = strptime(createdDateTime, "%Y-%m-%dT%H:%M:%SZ")
+
+| where (
+    match(lower('mfaDetail.authDetail'), "denied") OR
+    match(lower('mfaDetail.authDetail'), "did not respond") OR
+    match(lower('status.failureReason'), "strong authentication") OR
+    'status.errorCode' IN (500121, 500082, 50158)
+  )
+  AND authenticationRequirement = "multiFactorAuthentication"
+
+| stats
+    count                              AS mfa_denial_count,
+    earliest(event_time)               AS first_denial_epoch,
+    latest(event_time)                 AS last_denial_epoch,
+    values(ipAddress)                  AS source_ips,
+    values('mfaDetail.authMethod')     AS mfa_method,
+    values('mfaDetail.authDetail')     AS denial_detail,
+    values(appDisplayName)             AS target_apps
+    BY userPrincipalName, userDisplayName
+
+| where mfa_denial_count > 5
+
+| eval
+    first_denial      = strftime(first_denial_epoch, "%Y-%m-%d %H:%M:%S UTC"),
+    last_denial       = strftime(last_denial_epoch,  "%Y-%m-%d %H:%M:%S UTC"),
+    window_minutes    = round((last_denial_epoch - first_denial_epoch) / 60, 1),
+    severity          = "HIGH",
+    mitre_technique   = "T1621 - MFA Request Generation",
+    response_runbook  = "INC-TYPE-001 — Invoke-IdentityRiskContainment.ps1",
+    response_sla      = "Contain within 15 minutes",
+    soc2_controls     = "CC7.1, CC7.2",
+    recommended_action = "1. Disable account immediately via Graph API. " .
+                         "2. Revoke all sessions. " .
+                         "3. Contact user out-of-band to confirm. " .
+                         "4. Check for concurrent successful sign-in from unusual location."
+
+| table
+    userPrincipalName,
+    userDisplayName,
+    mfa_denial_count,
+    first_denial,
+    last_denial,
+    window_minutes,
+    source_ips,
+    mfa_method,
+    denial_detail,
+    target_apps,
+    severity,
+    mitre_technique,
+    response_sla,
+    recommended_action,
+    response_runbook,
+    soc2_controls
+
+| sort -mfa_denial_count
+
+| rename
+    userPrincipalName  AS "User UPN",
+    userDisplayName    AS "Display Name",
+    mfa_denial_count   AS "MFA Denials (60min)",
+    first_denial       AS "First Denial",
+    last_denial        AS "Last Denial",
+    window_minutes     AS "Window (minutes)",
+    source_ips         AS "Source IPs",
+    mfa_method         AS "MFA Method",
+    denial_detail      AS "Denial Detail",
+    target_apps        AS "Target Apps",
+    severity           AS "Severity",
+    mitre_technique    AS "MITRE ATT&CK",
+    response_sla       AS "Response SLA",
+    recommended_action AS "Recommended Action",
+    response_runbook   AS "Runbook",
+    soc2_controls      AS "SOC 2 Controls"

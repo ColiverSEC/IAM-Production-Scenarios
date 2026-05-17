@@ -1,0 +1,275 @@
+<dashboard version="1.1" theme="dark">
+  <label>IDSentinel — Identity Threat Detection</label>
+  <description>Scenario 10 — Real-time SOC visibility across all four identity threat detections. Entra ID sign-in and audit logs ingested via Graph API.</description>
+
+  <!-- ========================================================
+       ROW 1 — KPI SUMMARY TILES
+       ======================================================== -->
+  <row>
+    <panel>
+      <single>
+        <title>Sign-ins (Last 24hr)</title>
+        <search>
+          <query>
+            index="idsentinel_identity" sourcetype="azure:monitor:aad:signin" earliest=-24h
+            | stats count
+          </query>
+          <earliest>-24h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0x53a051","0x53a051"]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>MFA Denials (Last 24hr)</title>
+        <search>
+          <query>
+            index="idsentinel_identity" sourcetype="azure:monitor:aad:signin" earliest=-24h
+            (status.errorCode=500121 OR status.errorCode=500082 OR match(lower(mfaDetail.authDetail),"denied"))
+            | stats count
+          </query>
+          <earliest>-24h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0x53a051","0xf8be34","0xdc4e41"]</option>
+        <option name="ranges">[0,5,10]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>PIM Activations (Last 24hr)</title>
+        <search>
+          <query>
+            index="idsentinel_identity" sourcetype="azure:monitor:aad:audit" earliest=-24h
+            (match(lower(activityDisplayName),"add member to role") OR match(lower(activityDisplayName),"pim activation"))
+            result=success loggedByService=PIM
+            | stats count
+          </query>
+          <earliest>-24h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0x53a051","0xf8be34","0xdc4e41"]</option>
+        <option name="ranges">[0,3,10]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Legacy Auth Attempts (Last 24hr)</title>
+        <search>
+          <query>
+            index="idsentinel_identity" sourcetype="azure:monitor:aad:signin" earliest=-24h
+            clientAppUsed IN ("Exchange ActiveSync","IMAP","MAPI","POP3","SMTP","Other clients","Authenticated SMTP","Legacy Authentication Clients")
+            | stats count
+          </query>
+          <earliest>-24h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0x53a051","0xf8be34","0xdc4e41"]</option>
+        <option name="ranges">[0,5,20]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Risky Sign-ins (Last 24hr)</title>
+        <search>
+          <query>
+            index="idsentinel_identity" sourcetype="azure:monitor:aad:signin" earliest=-24h
+            riskLevelAggregated IN ("medium","high")
+            | stats count
+          </query>
+          <earliest>-24h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0x53a051","0xf8be34","0xdc4e41"]</option>
+        <option name="ranges">[0,1,5]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+
+  <!-- ========================================================
+       ROW 2 — SIGN-IN VOLUME TIMELINE + MFA DENIAL BY USER
+       ======================================================== -->
+  <row>
+    <panel>
+      <chart>
+        <title>Sign-in Volume — Last 24 Hours (by Risk Level)</title>
+        <search>
+          <query>
+            index="idsentinel_identity" sourcetype="azure:monitor:aad:signin" earliest=-24h
+            | eval risk_bucket = case(
+                riskLevelAggregated="high",   "High Risk",
+                riskLevelAggregated="medium", "Medium Risk",
+                riskLevelAggregated="low",    "Low Risk",
+                true(),                       "None"
+              )
+            | timechart span=30m count BY risk_bucket
+          </query>
+          <earliest>-24h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.fieldColors">{"High Risk": 0xdc4e41, "Medium Risk": 0xf8be34, "Low Risk": 0x53a051, "None": 0x5379af}</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>D-01: MFA Denials by User (Last 60min)</title>
+        <search>
+          <query>
+            index="idsentinel_identity" sourcetype="azure:monitor:aad:signin" earliest=-60m
+            (status.errorCode=500121 OR status.errorCode=500082 OR match(lower(mfaDetail.authDetail),"denied"))
+            authenticationRequirement=multiFactorAuthentication
+            | stats count BY userPrincipalName
+            | sort -count
+            | head 10
+          </query>
+          <earliest>-60m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">bar</option>
+        <option name="charting.chart.orientation">horizontal</option>
+        <option name="charting.fieldColors">{"count": 0xdc4e41}</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+
+  <!-- ========================================================
+       ROW 3 — GEOGRAPHIC MAP + PIM ACTIVATIONS TIMELINE
+       ======================================================== -->
+  <row>
+    <panel>
+      <map>
+        <title>Sign-in Geographic Distribution (Last 6hr)</title>
+        <search>
+          <query>
+            index="idsentinel_identity" sourcetype="azure:monitor:aad:signin" earliest=-6h
+            | iplocation ipAddress
+            | geostats latfield=lat longfield=lon count BY riskLevelAggregated
+          </query>
+          <earliest>-6h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="mapping.type">marker</option>
+        <option name="mapping.markerLayer.markerMinSize">10</option>
+        <option name="mapping.markerLayer.markerMaxSize">40</option>
+        <option name="mapping.map.zoom">2</option>
+      </map>
+    </panel>
+    <panel>
+      <chart>
+        <title>D-03: PIM Activations — Last 7 Days (After-Hours Highlighted)</title>
+        <search>
+          <query>
+            index="idsentinel_identity" sourcetype="azure:monitor:aad:audit" earliest=-7d
+            (match(lower(activityDisplayName),"add member to role") OR match(lower(activityDisplayName),"pim activation"))
+            result=success loggedByService=PIM
+            | eval event_time_utc = strptime(activityDateTime, "%Y-%m-%dT%H:%M:%SZ")
+            | eval local_epoch = event_time_utc + (-5 * 3600)
+            | eval local_hour = tonumber(strftime(local_epoch, "%H"))
+            | eval hours_bucket = if(local_hour >= 22 OR local_hour < 6, "After Hours (10pm-6am)", "Business Hours")
+            | timechart span=6h count BY hours_bucket
+          </query>
+          <earliest>-7d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.fieldColors">{"After Hours (10pm-6am)": 0xdc4e41, "Business Hours": 0x53a051}</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+  </row>
+
+  <!-- ========================================================
+       ROW 4 — LEGACY AUTH TREND + TOP BLOCKED IPs
+       ======================================================== -->
+  <row>
+    <panel>
+      <chart>
+        <title>D-04: Legacy Auth Attempts — Last 7 Days (Blocked vs Not Blocked)</title>
+        <search>
+          <query>
+            index="idsentinel_identity" sourcetype="azure:monitor:aad:signin" earliest=-7d
+            clientAppUsed IN ("Exchange ActiveSync","IMAP","MAPI","POP3","SMTP","Other clients","Authenticated SMTP","Legacy Authentication Clients")
+            | eval ca_status = if(conditionalAccessStatus="failure","Blocked by CA Policy","Not Blocked")
+            | timechart span=12h count BY ca_status
+          </query>
+          <earliest>-7d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.fieldColors">{"Blocked by CA Policy": 0x53a051, "Not Blocked": 0xdc4e41}</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel>
+      <table>
+        <title>Top Source IPs — Legacy Auth Attempts (Last 24hr)</title>
+        <search>
+          <query>
+            index="idsentinel_identity" sourcetype="azure:monitor:aad:signin" earliest=-24h
+            clientAppUsed IN ("Exchange ActiveSync","IMAP","MAPI","POP3","SMTP","Other clients","Authenticated SMTP","Legacy Authentication Clients")
+            | stats
+                count AS attempts,
+                dc(userPrincipalName) AS unique_users,
+                values(clientAppUsed) AS protocols,
+                values(location.countryOrRegion) AS countries
+              BY ipAddress
+            | sort -attempts
+            | head 10
+            | rename ipAddress AS "Source IP", attempts AS "Attempts", unique_users AS "Users Targeted", protocols AS "Protocols", countries AS "Countries"
+          </query>
+          <earliest>-24h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="count">10</option>
+      </table>
+    </panel>
+  </row>
+
+  <!-- ========================================================
+       ROW 5 — RECENT ALERTS FEED
+       ======================================================== -->
+  <row>
+    <panel>
+      <table>
+        <title>Recent High-Risk Sign-ins (Last 24hr) — Requires Immediate Review</title>
+        <search>
+          <query>
+            index="idsentinel_identity" sourcetype="azure:monitor:aad:signin" earliest=-24h
+            riskLevelAggregated IN ("medium","high")
+            | eval result_str = if('status.errorCode'=0, "SUCCESS", "FAILURE")
+            | eval time_str = strftime(strptime(createdDateTime, "%Y-%m-%dT%H:%M:%SZ"), "%Y-%m-%d %H:%M UTC")
+            | table time_str, userPrincipalName, ipAddress, location.city, location.countryOrRegion, appDisplayName, riskLevelAggregated, result_str, conditionalAccessStatus
+            | sort -time_str
+            | head 20
+            | rename time_str AS "Time", userPrincipalName AS "User", ipAddress AS "Source IP",
+                     location.city AS "City", location.countryOrRegion AS "Country",
+                     appDisplayName AS "Application", riskLevelAggregated AS "Risk Level",
+                     result_str AS "Result", conditionalAccessStatus AS "CA Status"
+          </query>
+          <earliest>-24h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="count">20</option>
+        <option name="rowNumbers">true</option>
+      </table>
+    </panel>
+  </row>
+
+</dashboard>

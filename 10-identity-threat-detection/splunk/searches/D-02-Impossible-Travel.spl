@@ -1,0 +1,141 @@
+| =========================================================================
+| D-02-Impossible-Travel.spl
+| IDSentinel Solutions — Identity Threat Detection Library
+| Scenario 10 — Identity Threat Detection Pipeline
+|
+| Description:
+|   Detects impossible travel by identifying users who have two successful
+|   sign-ins from cities more than 500 miles apart within a 2-hour window.
+|
+|   This is a high-fidelity indicator of account compromise — a legitimate
+|   user cannot physically be in two distant locations simultaneously.
+|   VPN use and corporate proxies may produce false positives; suppress
+|   known corporate proxy IPs via the exclusion list.
+|
+| Severity    : HIGH
+| Schedule    : Every 30 minutes
+| Trigger     : Number of results > 0
+| Response    : INC-TYPE-001 — Identity Risk Response Runbook (Scenario 07)
+| MITRE ATT&CK: T1078 — Valid Accounts
+| SOC 2       : CC7.1, CC7.2
+|
+| Tuning note : Add known corporate VPN egress IPs to the exclusion list
+|               below to suppress expected false positives.
+| =========================================================================
+
+| -------------------------------------------------------------------------
+| KNOWN VPN / PROXY EXCLUSIONS — add corporate egress IPs here
+| -------------------------------------------------------------------------
+| makeresults
+| eval excluded_ips = split("10.0.0.1,10.0.0.2,YOUR_CORP_VPN_IP", ",")
+| fields excluded_ips
+| append [
+
+index="idsentinel_identity" sourcetype="azure:monitor:aad:signin"
+    earliest=-2h latest=now
+
+| eval event_time = strptime(createdDateTime, "%Y-%m-%dT%H:%M:%SZ")
+
+| where
+    'status.errorCode' = 0
+    AND isInteractive   = "true"
+    AND isnotnull('location.geoCoordinates.latitude')
+    AND isnotnull('location.geoCoordinates.longitude')
+
+| eval
+    lat = 'location.geoCoordinates.latitude',
+    lon = 'location.geoCoordinates.longitude',
+    city    = 'location.city',
+    country = 'location.countryOrRegion'
+
+| -------------------------------------------------------------------------
+| Self-join: match each sign-in against every other sign-in for same user
+| The SPATH trick surfaces nested JSON fields for geolocation comparison
+| -------------------------------------------------------------------------
+| sort userPrincipalName, event_time
+
+| streamstats
+    current=f
+    last(event_time) AS prev_event_time,
+    last(lat)        AS prev_lat,
+    last(lon)        AS prev_lon,
+    last(city)       AS prev_city,
+    last(country)    AS prev_country,
+    last(ipAddress)  AS prev_ip
+    BY userPrincipalName
+
+| where isnotnull(prev_lat) AND isnotnull(prev_lon)
+
+| eval
+    | -----------------------------------------------------------------------
+    | Haversine formula — approximate great-circle distance in miles
+    | -----------------------------------------------------------------------
+    lat1_r  = lat      * pi() / 180,
+    lat2_r  = prev_lat * pi() / 180,
+    dlat_r  = (lat - prev_lat) * pi() / 180,
+    dlon_r  = (lon - prev_lon) * pi() / 180,
+    a       = sin(dlat_r/2) * sin(dlat_r/2) +
+              cos(lat1_r)   * cos(lat2_r) *
+              sin(dlon_r/2) * sin(dlon_r/2),
+    c       = 2 * atan2(sqrt(a), sqrt(1-a)),
+    distance_miles = round(3958.8 * c, 0),
+    time_gap_min   = round((event_time - prev_event_time) / 60, 1)
+
+| where
+    distance_miles > 500
+    AND time_gap_min BETWEEN 1 AND 120
+
+]
+
+| eval
+    current_signin = strftime(event_time,      "%Y-%m-%d %H:%M:%S UTC"),
+    previous_signin = strftime(prev_event_time, "%Y-%m-%d %H:%M:%S UTC"),
+    current_location  = city . ", " . country,
+    previous_location = prev_city . ", " . prev_country,
+    severity          = "HIGH",
+    mitre_technique   = "T1078 - Valid Accounts",
+    response_runbook  = "INC-TYPE-001 — Invoke-IdentityRiskContainment.ps1",
+    response_sla      = "Investigate within 30 minutes",
+    soc2_controls     = "CC7.1, CC7.2",
+    recommended_action = "1. Confirm with user out-of-band whether both sign-ins are legitimate. " .
+                         "2. If unconfirmed — disable account and revoke sessions. " .
+                         "3. Check if either IP is a known VPN or Tor exit node. " .
+                         "4. Correlate with Identity Protection risk events."
+
+| table
+    userPrincipalName,
+    userDisplayName,
+    previous_signin,
+    previous_location,
+    prev_ip,
+    current_signin,
+    current_location,
+    ipAddress,
+    distance_miles,
+    time_gap_min,
+    severity,
+    mitre_technique,
+    response_sla,
+    recommended_action,
+    response_runbook,
+    soc2_controls
+
+| sort -distance_miles
+
+| rename
+    userPrincipalName  AS "User UPN",
+    userDisplayName    AS "Display Name",
+    previous_signin    AS "Sign-in 1 Time",
+    previous_location  AS "Sign-in 1 Location",
+    prev_ip            AS "Sign-in 1 IP",
+    current_signin     AS "Sign-in 2 Time",
+    current_location   AS "Sign-in 2 Location",
+    ipAddress          AS "Sign-in 2 IP",
+    distance_miles     AS "Distance (miles)",
+    time_gap_min       AS "Time Gap (minutes)",
+    severity           AS "Severity",
+    mitre_technique    AS "MITRE ATT&CK",
+    response_sla       AS "Response SLA",
+    recommended_action AS "Recommended Action",
+    response_runbook   AS "Runbook",
+    soc2_controls      AS "SOC 2 Controls"
