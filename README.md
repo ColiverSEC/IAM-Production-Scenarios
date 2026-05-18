@@ -14,8 +14,9 @@ Each scenario includes a business problem, solution design, implementation evide
 | Cloud Identity | Microsoft Entra ID (M365 Developer Tenant) |
 | CIAM Platform | Auth0 (Okta Customer Identity Cloud) |
 | Workforce IAM | Okta Developer Edition |
+| SIEM | Splunk Enterprise 10.2.3 |
 | Domain | IDSentinelSolutions.com (hybrid — Entra Connect synced) |
-| Tools | PowerShell, Terraform, Postman, Python, SAML Tracer |
+| Tools | PowerShell, Terraform, Postman, Python, SAML Tracer, SPL |
 
 ---
 
@@ -31,7 +32,8 @@ Each scenario includes a business problem, solution design, implementation evide
 | 06 | [OAuth2 API Integration](./06-oauth2-api-integration/) | Need automated reporting on identity risk posture | Graph API, OAuth2, Python, Postman |
 | 07 | [Identity Risk Response Playbook](./07-identity-risk-response-playbook/) | No standardized process for responding to Identity Protection alerts | Entra Identity Protection, Graph API, NIST IR, SOC 2 |
 | 08 | [CIAM Login Platform with Auth0](./08-scenario-ciam-b2c/) | Customer-facing app needs secure, branded login with social federation and API protection | Auth0, OIDC, OAuth2, JWT, Google Federation, MFA |
-| 09 | [AWS IAM Least Privilege Implementation](./09-aws-iam-least-privilege/) | Overprivileged AWS roles increase risk of lateral movement and privilege escalation | AWS IAM, Least Privilege, IAM Policies, Access Analyzer, SCPs |
+| 09 | [AWS IAM Least Privilege Implementation](./09-aws-iam-least-privilege/) | Overprivileged AWS roles increase risk of lateral movement and privilege escalation | AWS IAM, Least Privilege, IAM Policies, CloudTrail |
+| 10 | [Identity Threat Detection Pipeline](./10-identity-threat-detection/) | No centralized SOC visibility into identity threats — MFA fatigue, impossible travel, after-hours PIM, and legacy auth spikes going undetected | Splunk, SPL, Graph API, HEC, Python, MITRE ATT&CK, SOC 2 |
 
 ---
 
@@ -54,9 +56,9 @@ Every scenario folder follows this format:
 |------------|-----------|
 | Conditional Access & MFA | 01, 04 |
 | Identity Governance & Access Reviews | 03 |
-| Privileged Access Management (PIM) | 04 |
+| Privileged Access Management (PIM) | 04, 10 |
 | Zero Trust Architecture | 04 |
-| PowerShell & Graph API Automation | 03, 04, 06, 07 |
+| PowerShell & Graph API Automation | 03, 04, 06, 07, 10 |
 | OAuth2 / OIDC / JWT | 06, 08 |
 | CIAM & Customer Identity | 08 |
 | Social Identity Federation | 08 |
@@ -64,7 +66,11 @@ Every scenario folder follows this format:
 | Terraform / Policy-as-Code | 04 |
 | Identity Lifecycle / JML | 03 |
 | Incident Response (P1/P2 Runbooks) | 07 |
-| SOC 2 Audit Evidence | 03, 07 |
+| SIEM Integration & Log Pipeline | 10 |
+| Threat Detection & SPL | 10 |
+| MITRE ATT&CK Mapping | 07, 10 |
+| SOC 2 Audit Evidence | 03, 07, 10 |
+| AWS IAM & Role Assumption | 09 |
 | SAML / SSO Federation | 02 (in progress) |
 | SCIM Provisioning | 05 (in progress) |
 
