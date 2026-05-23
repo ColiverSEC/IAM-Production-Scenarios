@@ -1,6 +1,6 @@
 # ==============================================================================
 # Get-PostReviewMembershipDelta.ps1
-# Scenario 11 — Entra Access Reviews
+# Scenario 11 - Entra Access Reviews
 # IDSentinel Solutions | Cleveland Oliver
 #
 # Purpose:
@@ -9,7 +9,7 @@
 #   which members were removed as a result of the completed access review.
 #
 # Usage:
-#   .\Get-PostReviewMembershipDelta.ps1 -BaselineCsvPath "..audit-exports\privileged-group-baseline_2026-05-17_0900.csv"
+#   .\Get-PostReviewMembershipDelta.ps1 -BaselineCsvPath "..\audit-exports\privileged-group-baseline_2026-05-18_1533.csv"
 #
 # Requirements:
 #   - Microsoft.Graph PowerShell module
@@ -22,13 +22,13 @@ param(
     [string]$BaselineCsvPath
 )
 
-# ── Config ────────────────────────────────────────────────────────────────────
+# -- Config --------------------------------------------------------------------
 $GroupDisplayName = "GRP-SEC-PrivilegedUsers"
 $OutputDir        = "$PSScriptRoot\..\audit-exports"
 $Timestamp        = Get-Date -Format "yyyy-MM-dd_HHmm"
 $DeltaFile        = "$OutputDir\membership-delta_$Timestamp.csv"
 
-# ── Validate Baseline File ────────────────────────────────────────────────────
+# -- Validate Baseline File ----------------------------------------------------
 if (-not (Test-Path $BaselineCsvPath)) {
     Write-Host "[!] Baseline CSV not found: $BaselineCsvPath" -ForegroundColor Red
     exit 1
@@ -37,11 +37,11 @@ if (-not (Test-Path $BaselineCsvPath)) {
 $Baseline = Import-Csv -Path $BaselineCsvPath
 Write-Host "[+] Loaded baseline: $($Baseline.Count) members from $BaselineCsvPath" -ForegroundColor Green
 
-# ── Connect ───────────────────────────────────────────────────────────────────
+# -- Connect -------------------------------------------------------------------
 Write-Host "[*] Connecting to Microsoft Graph..." -ForegroundColor Cyan
 Connect-MgGraph -Scopes "Group.Read.All","User.Read.All","Directory.Read.All" -NoWelcome
 
-# ── Get Current Group Membership ──────────────────────────────────────────────
+# -- Get Current Group Membership ----------------------------------------------
 Write-Host "[*] Resolving group: $GroupDisplayName" -ForegroundColor Cyan
 $Group = Get-MgGroup -Filter "displayName eq '$GroupDisplayName'" -Property "Id,DisplayName"
 
@@ -50,30 +50,20 @@ if (-not $Group) {
     exit 1
 }
 
-$CurrentMembers = Get-MgGroupMember -GroupId $Group.Id -All
+$CurrentMembers = Get-MgGroupMemberAsUser -GroupId $Group.Id -All `
+    -Property "Id,DisplayName,UserPrincipalName,Department,JobTitle"
+
 Write-Host "[+] Current member count: $($CurrentMembers.Count)" -ForegroundColor Green
 
-# Enrich current members
-$CurrentMemberDetails = @()
-foreach ($Member in $CurrentMembers) {
-    $User = Get-MgUser -UserId $Member.Id -Property "DisplayName,UserPrincipalName,Department,JobTitle"
-    $CurrentMemberDetails += [PSCustomObject]@{
-        DisplayName       = $User.DisplayName
-        UserPrincipalName = $User.UserPrincipalName
-        Department        = $User.Department
-        JobTitle          = $User.JobTitle
-    }
-}
-
-# ── Compute Delta ─────────────────────────────────────────────────────────────
+# -- Compute Delta -------------------------------------------------------------
 $BaselineUPNs = $Baseline | Select-Object -ExpandProperty UserPrincipalName
-$CurrentUPNs  = $CurrentMemberDetails | Select-Object -ExpandProperty UserPrincipalName
+$CurrentUPNs  = $CurrentMembers | Select-Object -ExpandProperty UserPrincipalName
 
-$Removed = $Baseline | Where-Object { $_.UserPrincipalName -notin $CurrentUPNs }
-$Added   = $CurrentMemberDetails | Where-Object { $_.UserPrincipalName -notin $BaselineUPNs }
-$Retained = $CurrentMemberDetails | Where-Object { $_.UserPrincipalName -in $BaselineUPNs }
+$Removed  = $Baseline | Where-Object { $_.UserPrincipalName -notin $CurrentUPNs }
+$Added    = $CurrentMembers | Where-Object { $_.UserPrincipalName -notin $BaselineUPNs }
+$Retained = $CurrentMembers | Where-Object { $_.UserPrincipalName -in $BaselineUPNs }
 
-# ── Build Delta Report ────────────────────────────────────────────────────────
+# -- Build Delta Report --------------------------------------------------------
 $DeltaReport = @()
 
 foreach ($User in $Retained) {
@@ -93,7 +83,7 @@ foreach ($User in $Removed) {
         UserPrincipalName = $User.UserPrincipalName
         Department        = $User.Department
         Status            = "REMOVED"
-        ChangeReason      = "Access denied or not reviewed — auto-removed by Access Review policy"
+        ChangeReason      = "Access denied - removed by Access Review policy"
         ReportDate        = (Get-Date -Format "yyyy-MM-dd HH:mm")
     }
 }
@@ -104,42 +94,40 @@ foreach ($User in $Added) {
         UserPrincipalName = $User.UserPrincipalName
         Department        = $User.Department
         Status            = "ADDED"
-        ChangeReason      = "Added outside of review cycle — investigate if unexpected"
+        ChangeReason      = "Added outside of review cycle - investigate if unexpected"
         ReportDate        = (Get-Date -Format "yyyy-MM-dd HH:mm")
     }
 }
 
-# ── Display Results ───────────────────────────────────────────────────────────
-Write-Host "`n── Membership Delta Report ───────────────────────────────────" -ForegroundColor Cyan
-
-Write-Host "`n  RETAINED ($($Retained.Count)):" -ForegroundColor Green
-$Retained | Format-Table DisplayName, UserPrincipalName, Department -AutoSize
+# -- Display Results -----------------------------------------------------------
+Write-Host "`n-- Membership Delta Report ------------------------------------------" -ForegroundColor Cyan
 
 if ($Removed.Count -gt 0) {
-    Write-Host "  REMOVED ($($Removed.Count)) — Access review enforcement:" -ForegroundColor Red
+    Write-Host "`n  REMOVED ($($Removed.Count)) - Access review enforcement:" -ForegroundColor Red
     $Removed | Format-Table DisplayName, UserPrincipalName, Department -AutoSize
 } else {
     Write-Host "  REMOVED: None" -ForegroundColor Gray
 }
 
 if ($Added.Count -gt 0) {
-    Write-Host "  ADDED ($($Added.Count)) — Added outside review cycle:" -ForegroundColor Yellow
+    Write-Host "  ADDED ($($Added.Count)) - Added outside review cycle:" -ForegroundColor Yellow
     $Added | Format-Table DisplayName, UserPrincipalName, Department -AutoSize
     Write-Host "  [!] Review unexpected additions for unauthorized provisioning." -ForegroundColor Yellow
 } else {
     Write-Host "  ADDED: None" -ForegroundColor Gray
 }
 
-Write-Host "`n── Summary ───────────────────────────────────────────────────" -ForegroundColor Cyan
+Write-Host "`n-- Summary ----------------------------------------------------------" -ForegroundColor Cyan
 Write-Host "  Baseline members : $($Baseline.Count)"
-Write-Host "  Current members  : $($CurrentMemberDetails.Count)"
+Write-Host "  Current members  : $($CurrentMembers.Count)"
 Write-Host "  Retained         : $($Retained.Count)" -ForegroundColor Green
 Write-Host "  Removed          : $($Removed.Count)"  -ForegroundColor Red
 Write-Host "  Added (anomaly)  : $($Added.Count)"    -ForegroundColor Yellow
 
-# ── Export ────────────────────────────────────────────────────────────────────
+# -- Export --------------------------------------------------------------------
 if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory -Path $OutputDir | Out-Null }
 $DeltaReport | Export-Csv -Path $DeltaFile -NoTypeInformation -Encoding UTF8
 
 Write-Host "`n[+] Delta report exported: $DeltaFile" -ForegroundColor Green
-Write-Host "[i] Pair this with the audit trail export for a complete SOC 2 evidence package.`n" -ForegroundColor DarkCyan
+Write-Host "[i] Pair this with the audit trail export for a complete SOC 2 evidence package." -ForegroundColor DarkCyan
+Write-Host ""

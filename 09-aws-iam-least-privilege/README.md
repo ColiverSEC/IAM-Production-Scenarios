@@ -78,7 +78,14 @@ access (no console login). User added to group `GRP-IAMReporters` to
 enforce policy assignment via group membership rather than inline policies.
 
 ![IAM User Created](./screenshots/01-iam-user-created.png)
-![Group Membership](./screenshots/02-group-membership.png)
+
+---
+
+![Access Key Created](./screenshots/02a-user-access-key-created.png)
+
+---
+
+![Group Membership](./screenshots/02b-group-membership.png)
 
 ---
 
@@ -94,14 +101,21 @@ Attached to `GRP-IAMReporters` — inherited by all group members.
 
 ---
 
+![Policy Permissions](./screenshots/04-policy-summary.png)
+
+---
+
 ### Step 3 — Create IAM Role with Scoped Trust Policy
 
 Role `Role-IDSentinel-Auditor` created with trust policy restricting
 assumption to `svc-idsentinel-reporter` only, enforced by an ExternalId
 condition to prevent confused deputy attacks.
 
-![Role Summary](./screenshots/04-role-summary.png)
-![Trust Policy](./screenshots/05-trust-policy.png)
+![Role Summary](./screenshots/05-role-summary.png)
+
+---
+
+![Trust Policy](./screenshots/06-trust-policy.png)
 
 ---
 
@@ -110,7 +124,7 @@ condition to prevent confused deputy attacks.
 Trail `IDSentinel-AuditTrail` created across all regions with management
 events (Read + Write) logged to S3 bucket `idsentinel-cloudtrail-logs`.
 
-![CloudTrail Active](./screenshots/06-cloudtrail-active.png)
+![CloudTrail Active](./screenshots/07-cloudtrail-active.png)
 
 ---
 
@@ -140,9 +154,15 @@ export AWS_SESSION_TOKEN=<SessionToken>
 aws sts get-caller-identity
 ```
 
-![Caller Identity Pre-Assumption](./screenshots/07-caller-identity-user.png)
-![AssumeRole Response with Temp Credentials](./screenshots/08-assumerole-response.png)
-![Caller Identity Post-Assumption — Role Confirmed](./screenshots/09-caller-identity-role.png)
+![Caller Identity Pre-Assumption](./screenshots/08-caller-identity-user.png)
+
+---
+
+![AssumeRole Response with Temp Credentials](./screenshots/09-assumerole-response.png)
+
+---
+
+![Caller Identity Post-Assumption — Role Confirmed](./screenshots/10-caller-identity-role.png)
 
 ---
 
@@ -159,9 +179,16 @@ aws iam list-users
 aws iam create-user --user-name test-deny-check
 ```
 
-![List Users — Allowed](./screenshots/10-list-users-allowed.png)
-![Create User — AccessDenied](./screenshots/11-create-user-denied.png)
-![Create User — AccessDenied](./screenshots/12-python-audit-script.png)
+![List Users — Allowed](./screenshots/11-list-users-allowed.png)
+
+---
+
+![Create User — AccessDenied](./screenshots/12-create-user-denied.png)
+
+---
+
+![Create User — AccessDenied](./screenshots/13-python-audit-script.png)
+
 ---
 
 ### Step 7 — CloudTrail Audit Evidence
@@ -171,6 +198,9 @@ metadata — principal ARN, session name, ExternalId, source IP, and
 timestamp — providing a complete audit trail for compliance documentation.
 
 ![CloudTrail AssumeRole Event](./screenshots/14-cloudtrail-assumerole.png)
+
+---
+
 ![CloudTrail Event JSON Detail](./screenshots/15-cloudtrail-event-json.png)
 
 ---

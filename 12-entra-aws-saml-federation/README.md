@@ -121,6 +121,10 @@ NameID set to `user.userprincipalname` with `emailAddress` format.
 
 ---
 
+![Attribute Mapping](./screenshots/02-saml-config/attribute-mapping-uid.png)
+
+---
+
 #### Step 3 — AWS Identity Provider Setup
 
 IAM Identity Provider registered in AWS using the Entra federation metadata
@@ -163,7 +167,7 @@ AWS managed policy attached. No write permissions granted at any scope.
 }
 ```
 
-![AWS Role Created](./screenshots/04-aws-role-config/aws-role-created.png)
+![AWS Role Created](./screenshots/04-aws-role-config/role-summary-page.png)
 
 ---
 
