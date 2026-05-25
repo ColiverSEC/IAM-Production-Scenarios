@@ -16,7 +16,7 @@ Each scenario includes a business problem, solution design, implementation evide
 | Workforce IAM | Okta Developer Edition |
 | SIEM | Splunk Enterprise 10.2.3 |
 | Domain | IDSentinelSolutions.com (hybrid — Entra Connect synced) |
-| Tools | PowerShell, Terraform, Postman, Python, SAML Tracer, SPL |
+| Tools | PowerShell, Terraform, Postman, Python, SAML Tracer, SPL, AWS CLI |
 
 ---
 
@@ -28,14 +28,15 @@ Each scenario includes a business problem, solution design, implementation evide
 | 02 | [App Migration: Legacy IdP → Okta](./02-app-migration-okta/) | M&A requires migrating apps off legacy SSO | SAML, Okta, Attribute Mapping, Cutover Planning |
 | 03 | [Orphaned Access Audit](./03-orphaned-access-audit/) | Audit found stale users retaining access post-offboarding | Graph API, PowerShell, Access Governance |
 | 04 | [Zero Trust Rollout](./04-zero-trust-rollout/) | Executive mandate to implement Zero Trust for 1,000-person org | CA Policies, PIM, Compliant Devices, Terraform |
-| 05 | [SCIM Provisioning Pipeline](./05-scim-provisioning/) | Manual provisioning causing access delays and errors | SCIM, Lifecycle Automation, Okta Workflows |
+| 05 | [SCIM Provisioning Pipeline — Okta](./05-scim-provisioning/) | Manual provisioning causing access delays and errors | SCIM, Lifecycle Automation, Okta Workflows |
 | 06 | [OAuth2 API Integration](./06-oauth2-api-integration/) | Need automated reporting on identity risk posture | Graph API, OAuth2, Python, Postman |
 | 07 | [Identity Risk Response Playbook](./07-identity-risk-response-playbook/) | No standardized process for responding to Identity Protection alerts | Entra Identity Protection, Graph API, NIST IR, SOC 2 |
 | 08 | [CIAM Login Platform with Auth0](./08-scenario-ciam-b2c/) | Customer-facing app needs secure, branded login with social federation and API protection | Auth0, OIDC, OAuth2, JWT, Google Federation, MFA |
 | 09 | [AWS IAM Least Privilege Implementation](./09-aws-iam-least-privilege/) | Overprivileged AWS roles increase risk of lateral movement and privilege escalation | AWS IAM, Least Privilege, IAM Policies, CloudTrail |
 | 10 | [Identity Threat Detection Pipeline](./10-identity-threat-detection/) | No centralized SOC visibility into identity threats — MFA fatigue, impossible travel, after-hours PIM, and legacy auth spikes going undetected | Splunk, SPL, Graph API, HEC, Python, MITRE ATT&CK, SOC 2 |
-| 11 | [Entra Access Reviews](./11-entra-access-reviews/) | 188-member privileged group unreviewed since provisioning — SOC 2 CC6.3 finding, no documented approval trail, manager attribute unpopulated in AD | Entra Identity Governance, Access Reviews, AD PowerShell, Graph API, SOC 2 |
-| 12 | [Entra ID + AWS SAML Federation](./12-entra-aws-saml-federation/) | AWS console access via long-lived IAM user credentials — Zero Trust violation and SOC 2 finding; no documented SAML troubleshooting path | SAML 2.0, Entra ID SSO, AWS IAM Federation, STS, SAML Tracer, SOC 2 |
+| 11 | [Entra ID Access Reviews](./11-entra-access-reviews/) | No formal access recertification process — privileged group membership never reviewed, SOC 2 CC6.2 and CC6.3 exposure | Entra ID Governance, Access Reviews, PowerShell, Graph API, SOC 2 |
+| 12 | [Entra ID + AWS SAML Federation](./12-entra-aws-saml-federation/) | AWS console access granted via IAM users with long-lived static credentials — violating Zero Trust mandate | SAML 2.0, Entra ID, AWS IAM, Federation, SAML Tracer, SOC 2 |
+| 13 | [SCIM Provisioning: Entra ID → AWS IAM Identity Center](./13-scim-provisioning-entra-aws/) | Manual AWS access provisioning creating 24-72hr delays and orphaned access for offboarded users | SCIM 2.0, Entra ID, AWS IAM Identity Center, JML Lifecycle, PowerShell, SOC 2 |
 
 ---
 
@@ -49,6 +50,7 @@ Every scenario folder follows this format:
 - **diagrams/** — Architecture or flow diagrams (draw.io)
 - **postman/** — API collections where applicable
 - **runbooks/** — SOC runbooks and operational procedures (where applicable)
+- **evidence/** — SOC 2 control mapping and audit evidence exports
 
 ---
 
@@ -60,23 +62,24 @@ Every scenario folder follows this format:
 | Identity Governance & Access Reviews | 03, 11 |
 | Privileged Access Management (PIM) | 04, 10 |
 | Zero Trust Architecture | 04 |
-| PowerShell & Graph API Automation | 03, 04, 06, 07, 10, 11, 12 |
+| PowerShell & Graph API Automation | 03, 04, 06, 07, 10, 11, 13 |
 | OAuth2 / OIDC / JWT | 06, 08 |
 | CIAM & Customer Identity | 08 |
 | Social Identity Federation | 08 |
-| SAML 2.0 / SSO Federation | 02, 12 |
 | API Protection with Bearer Tokens | 06, 08 |
 | Terraform / Policy-as-Code | 04 |
-| Identity Lifecycle / JML | 03, 11 |
+| Identity Lifecycle / JML | 03, 13 |
 | Incident Response (P1/P2 Runbooks) | 07 |
 | SIEM Integration & Log Pipeline | 10 |
 | Threat Detection & SPL | 10 |
 | MITRE ATT&CK Mapping | 07, 10 |
-| SOC 2 Audit Evidence | 03, 07, 09, 10, 11, 12 |
+| SOC 2 Audit Evidence | 03, 07, 10, 11, 12, 13 |
 | AWS IAM & Role Assumption | 09 |
-| AWS SAML Federation & STS | 12 |
-| Hybrid Identity (AD + Entra) | 11 |
-| SCIM Provisioning | 05 (in progress) |
+| SAML / SSO Federation | 12 |
+| SAML Troubleshooting & Break/Fix | 12 |
+| SCIM Provisioning | 13 |
+| AWS IAM Identity Center | 12, 13 |
+| Hybrid Identity (AD + Entra Connect) | 11, 13 |
 
 ---
 
