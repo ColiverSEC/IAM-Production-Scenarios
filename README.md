@@ -6,6 +6,12 @@ Each scenario includes a business problem, solution design, implementation evide
 
 ---
 
+## 🏗️ Lab Architecture
+
+![Lab Architecture](lab-architecture.png)
+
+---
+
 ## 🏢 Lab Environment
 
 | Component | Detail |
@@ -13,7 +19,7 @@ Each scenario includes a business problem, solution design, implementation evide
 | On-Prem | Windows Server 2019 (Active Directory DS) |
 | Cloud Identity | Microsoft Entra ID (M365 Developer Tenant) |
 | CIAM Platform | Auth0 (Okta Customer Identity Cloud) |
-| Workforce IAM | Okta Developer Edition |
+| Workforce IAM | Okta (Integrator Free Plan) |
 | SIEM | Splunk Enterprise 10.2.3 |
 | Domain | IDSentinelSolutions.com (hybrid — Entra Connect synced) |
 | Tools | PowerShell, Terraform, Postman, Python, SAML Tracer, SPL, AWS CLI |
@@ -25,10 +31,10 @@ Each scenario includes a business problem, solution design, implementation evide
 | # | Scenario | Problem Solved | Key Skills |
 |---|----------|----------------|------------|
 | 01 | [MFA Bypass via Legacy Auth](./01-mfa-bypass-legacy-auth/) | Legacy protocols bypassing MFA controls org-wide | Conditional Access, Sign-in Logs, What-If, Block Legacy Auth |
-| 02 | [App Migration: Legacy IdP → Okta](./02-app-migration-okta/) | M&A requires migrating apps off legacy SSO | SAML, Okta, Attribute Mapping, Cutover Planning |
+| 02 | [App Migration: Legacy IdP → Okta](./02-app-migration-okta/) | M&A requires migrating subsidiary apps off Entra SSO onto Okta within 60 days | Okta AD Agent, SAML 2.0, IdP Migration, SAML Tracer, Cutover Planning, SOC 2 |
 | 03 | [Orphaned Access Audit](./03-orphaned-access-audit/) | Audit found stale users retaining access post-offboarding | Graph API, PowerShell, Access Governance |
 | 04 | [Zero Trust Rollout](./04-zero-trust-rollout/) | Executive mandate to implement Zero Trust for 1,000-person org | CA Policies, PIM, Compliant Devices, Terraform |
-| 05 | [SCIM Provisioning Pipeline — Okta](./05-scim-provisioning/) | Manual provisioning causing access delays and errors | SCIM, Lifecycle Automation, Okta Workflows |
+| 05 | [SCIM Provisioning Pipeline — Okta](./05-scim-provisioning/) | Manual provisioning causing access delays and errors *(requires Okta paid tier)* | SCIM, Lifecycle Automation, Okta Workflows |
 | 06 | [OAuth2 API Integration](./06-oauth2-api-integration/) | Need automated reporting on identity risk posture | Graph API, OAuth2, Python, Postman |
 | 07 | [Identity Risk Response Playbook](./07-identity-risk-response-playbook/) | No standardized process for responding to Identity Protection alerts | Entra Identity Protection, Graph API, NIST IR, SOC 2 |
 | 08 | [CIAM Login Platform with Auth0](./08-scenario-ciam-b2c/) | Customer-facing app needs secure, branded login with social federation and API protection | Auth0, OIDC, OAuth2, JWT, Google Federation, MFA |
@@ -75,11 +81,13 @@ Every scenario folder follows this format:
 | MITRE ATT&CK Mapping | 07, 10 |
 | SOC 2 Audit Evidence | 03, 07, 10, 11, 12, 13 |
 | AWS IAM & Role Assumption | 09 |
-| SAML / SSO Federation | 12 |
-| SAML Troubleshooting & Break/Fix | 12 |
+| SAML / SSO Federation | 02, 12 |
+| SAML Troubleshooting & Break/Fix | 02, 12 |
+| IdP Migration & Controlled Cutover | 02 |
+| Okta — AD Agent, App Federation, SSO | 02 |
 | SCIM Provisioning | 13 |
 | AWS IAM Identity Center | 12, 13 |
-| Hybrid Identity (AD + Entra Connect) | 11, 13 |
+| Hybrid Identity (AD + Entra + Okta) | 02, 11, 13 |
 
 ---
 
