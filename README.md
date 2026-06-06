@@ -34,7 +34,7 @@ Each scenario includes a business problem, solution design, implementation evide
 | 02 | [App Migration: Legacy IdP → Okta](./02-app-migration-okta/) | M&A requires migrating subsidiary apps off Entra SSO onto Okta within 60 days | Okta AD Agent, SAML 2.0, IdP Migration, SAML Tracer, Cutover Planning, SOC 2 |
 | 03 | [Orphaned Access Audit](./03-orphaned-access-audit/) | Audit found stale users retaining access post-offboarding | Graph API, PowerShell, Access Governance |
 | 04 | [Zero Trust Rollout](./04-zero-trust-rollout/) | Executive mandate to implement Zero Trust for 1,000-person org | CA Policies, PIM, Compliant Devices, Terraform |
-| 05 | [SCIM Provisioning Pipeline — Okta](./05-scim-provisioning/) | Manual provisioning causing access delays and errors *(requires Okta paid tier)* | SCIM, Lifecycle Automation, Okta Workflows |
+| 05 | [Okta Workflows JML Automation](./05-okta-workflows-jml/) | Acquired workforce in Okta has no automated access lifecycle — joiners, movers, and leavers require manual admin work with no audit trail | Okta Workflows, JML Lifecycle, Audit Log Tables, Hybrid AD Identity Patterns, SOC 2 |
 | 06 | [OAuth2 API Integration](./06-oauth2-api-integration/) | Need automated reporting on identity risk posture | Graph API, OAuth2, Python, Postman |
 | 07 | [Identity Risk Response Playbook](./07-identity-risk-response-playbook/) | No standardized process for responding to Identity Protection alerts | Entra Identity Protection, Graph API, NIST IR, SOC 2 |
 | 08 | [CIAM Login Platform with Auth0](./08-scenario-ciam-b2c/) | Customer-facing app needs secure, branded login with social federation and API protection | Auth0, OIDC, OAuth2, JWT, Google Federation, MFA |
@@ -74,20 +74,22 @@ Every scenario folder follows this format:
 | Social Identity Federation | 08 |
 | API Protection with Bearer Tokens | 06, 08 |
 | Terraform / Policy-as-Code | 04 |
-| Identity Lifecycle / JML | 03, 13 |
+| Identity Lifecycle / JML | 03, 05, 13 |
+| Okta Workflows — JML Automation | 05 |
 | Incident Response (P1/P2 Runbooks) | 07 |
 | SIEM Integration & Log Pipeline | 10 |
 | Threat Detection & SPL | 10 |
 | MITRE ATT&CK Mapping | 07, 10 |
-| SOC 2 Audit Evidence | 03, 07, 10, 11, 12, 13 |
+| SOC 2 Audit Evidence | 03, 05, 07, 10, 11, 12, 13 |
 | AWS IAM & Role Assumption | 09 |
 | SAML / SSO Federation | 02, 12 |
 | SAML Troubleshooting & Break/Fix | 02, 12 |
 | IdP Migration & Controlled Cutover | 02 |
 | Okta — AD Agent, App Federation, SSO | 02 |
+| Okta — Workflows, Lifecycle Automation | 05 |
 | SCIM Provisioning | 13 |
 | AWS IAM Identity Center | 12, 13 |
-| Hybrid Identity (AD + Entra + Okta) | 02, 11, 13 |
+| Hybrid Identity (AD + Entra + Okta) | 02, 05, 11, 13 |
 
 ---
 
