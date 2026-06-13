@@ -1,0 +1,18 @@
+﻿// SCN-14 -- Key Vault Managed Identity Audit Query
+// Run in Log Analytics workspace linked to the Key Vault diagnostic settings.
+// Returns secret access events attributed to the managed identity principal.
+
+AzureDiagnostics
+| where ResourceType == "VAULTS"
+| where OperationName == "SecretGet"
+| where ResultType == "Success"
+| project
+    TimeGenerated,
+    CallerIdentity = identity_claim_oid_g,
+    Operation      = OperationName,
+    Result         = ResultType,
+    HttpStatus     = httpStatusCode_d,
+    SecretId       = requestUri_s,
+    ResourceGroup  = ResourceGroup,
+    VaultName      = Resource
+| order by TimeGenerated desc
