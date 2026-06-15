@@ -1,0 +1,8 @@
+﻿// =============================================================================
+// agent-audit.spl
+// IDSentinel Solutions -- SCN-15 AI Agent Identity Governance
+// Splunk SPL queries for AI Agent API Activity dashboard.
+// Source: Splunk HEC (agent_runner.py log events) + Entra sign-in logs.
+// =============================================================================
+
+// Placeholder -- SPL queries to follow in phase 4 build guide
