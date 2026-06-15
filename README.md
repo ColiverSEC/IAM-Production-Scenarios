@@ -22,6 +22,7 @@ Each scenario includes a business problem, solution design, implementation evide
 | Workforce IAM | Okta (Integrator Free Plan) |
 | SIEM | Splunk Enterprise 10.2.3 |
 | Domain | IDSentinelSolutions.com (hybrid — Entra Connect synced) |
+| Azure | IDS-NHI-VM, Key Vault (kv-idsentinel-azureuser), Log Analytics (law-idsentinel-nhi) |
 | Tools | PowerShell, Terraform, Postman, Python, SAML Tracer, SPL, AWS CLI |
 
 ---
@@ -43,6 +44,7 @@ Each scenario includes a business problem, solution design, implementation evide
 | 11 | [Entra ID Access Reviews](./11-entra-access-reviews/) | No formal access recertification process — privileged group membership never reviewed, SOC 2 CC6.2 and CC6.3 exposure | Entra ID Governance, Access Reviews, PowerShell, Graph API, SOC 2 |
 | 12 | [Entra ID + AWS SAML Federation](./12-entra-aws-saml-federation/) | AWS console access granted via IAM users with long-lived static credentials — violating Zero Trust mandate | SAML 2.0, Entra ID, AWS IAM, Federation, SAML Tracer, SOC 2 |
 | 13 | [SCIM Provisioning: Entra ID → AWS IAM Identity Center](./13-scim-provisioning-entra-aws/) | Manual AWS access provisioning creating 24-72hr delays and orphaned access for offboarded users | SCIM 2.0, Entra ID, AWS IAM Identity Center, JML Lifecycle, PowerShell, SOC 2 |
+| 14 | [Securing Non-Human Identities: Azure Managed Identity](./14-azure-managed-identity/) | Azure workloads using stored service principal secrets with no credential binding, no rotation enforcement, and no per-operation audit trail | Azure Managed Identity, IMDS, Key Vault RBAC, Python, Log Analytics, SOC 2 |
 
 ---
 
@@ -80,7 +82,7 @@ Every scenario folder follows this format:
 | SIEM Integration & Log Pipeline | 10 |
 | Threat Detection & SPL | 10 |
 | MITRE ATT&CK Mapping | 07, 10 |
-| SOC 2 Audit Evidence | 03, 05, 07, 10, 11, 12, 13 |
+| SOC 2 Audit Evidence | 03, 05, 07, 10, 11, 12, 13, 14 |
 | AWS IAM & Role Assumption | 09 |
 | SAML / SSO Federation | 02, 12 |
 | SAML Troubleshooting & Break/Fix | 02, 12 |
@@ -90,6 +92,10 @@ Every scenario folder follows this format:
 | SCIM Provisioning | 13 |
 | AWS IAM Identity Center | 12, 13 |
 | Hybrid Identity (AD + Entra + Okta) | 02, 05, 11, 13 |
+| Non-Human Identity (NHI) | 09, 14 |
+| Azure Managed Identity & IMDS | 14 |
+| Azure Key Vault RBAC | 14 |
+| Workload Identity & Zero Stored Credentials | 09, 14 |
 
 ---
 

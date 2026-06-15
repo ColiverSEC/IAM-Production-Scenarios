@@ -23,11 +23,12 @@ From a compliance standpoint, SOC 2 CC6.1 requires logical access controls that 
 | Component | Detail |
 |---|---|
 | Cloud Platform | Microsoft Azure |
+| Workload VM | IDS-NHI-VM (Ubuntu Server 24.04 LTS, South Central US) |
 | Identity Mechanism | Azure Managed Identity — System-Assigned and User-Assigned |
-| Target Resource | Azure Key Vault (RBAC authorization mode) |
+| Target Resource | Azure Key Vault — kv-idsentinel-azureuser (RBAC authorization mode) |
 | Authentication Protocol | OAuth 2.0 bearer token via Instance Metadata Service (IMDS) |
 | Authorization Model | Azure RBAC — Key Vault Secrets User role |
-| Audit Destination | Key Vault diagnostic logs forwarded to Log Analytics |
+| Audit Destination | Key Vault diagnostic logs forwarded to Log Analytics (law-idsentinel-nhi) |
 | Compliance Target | SOC 2 CC6.1, CC6.3, CC6.6 |
 | Cross-Cloud Reference | Scenario 09 — AWS IAM Least Privilege (STS role assumption pattern) |
 
@@ -38,7 +39,7 @@ From a compliance standpoint, SOC 2 CC6.1 requires logical access controls that 
 The non-human identity remediation is implemented across three workstreams:
 
 **Workstream 1 — Managed Identity Configuration**
-System-assigned Managed Identity is enabled on the Azure VM hosting the workload. Azure creates and manages a corresponding Entra ID service principal, named identically to the VM, with no associated credentials. The identity's lifecycle is tied directly to the VM — when the VM is deprovisioned, the identity is deleted automatically with no IAM team intervention required. A user-assigned managed identity is provisioned as a second demonstration to document the decision criteria for each type: system-assigned for single-resource workloads whose identity should retire with the resource, and user-assigned for shared identities that must span multiple resources or survive resource replacement.
+System-assigned Managed Identity is enabled on IDS-NHI-VM. Azure creates and manages a corresponding Entra ID service principal, named identically to the VM, with no associated credentials. The identity's lifecycle is tied directly to the VM — when the VM is deprovisioned, the identity is deleted automatically with no IAM team intervention required. A user-assigned managed identity is provisioned as a second demonstration to document the decision criteria for each type: system-assigned for single-resource workloads whose identity should retire with the resource, and user-assigned for shared identities that must span multiple resources or survive resource replacement.
 
 **Workstream 2 — Key Vault RBAC Authorization**
 An Azure Key Vault is provisioned with the Azure role-based access control permission model selected at creation. RBAC mode is chosen over legacy access policies for three reasons: role assignments can be scoped to individual secrets rather than the vault as a whole, the model integrates with Privileged Identity Management for just-in-time access patterns, and all data-plane operations produce audit events in the Azure Monitor activity log. The Key Vault Secrets User built-in role is assigned to the VM's managed identity principal, scoped to the vault. This role grants read access to secret values only — it does not grant the ability to create, delete, or manage secrets, and does not extend to keys or certificates stored in the same vault.
@@ -52,27 +53,27 @@ Key Vault diagnostic settings are configured to forward AuditEvent logs to a Log
 
 ### Managed Identity Enablement
 
-System-assigned Managed Identity was enabled on the Cloud Ops VM through the Azure portal Identity blade. Enabling the identity created a corresponding service principal object in Entra ID with no credentials attached. The principal's Object ID was recorded for use in the role assignment and for correlating audit log entries back to the workload.
+System-assigned Managed Identity was enabled on IDS-NHI-VM through the Azure portal Identity blade. Enabling the identity created a corresponding service principal object in Entra ID with no credentials attached. The principal's Object ID was recorded for use in the role assignment and for correlating audit log entries back to the workload.
 
-![System-assigned Managed Identity enabled on VM — Identity blade showing Status On and Object ID](screenshots/SCN-14-01-managed-identity-enabled.png)
+![System-assigned Managed Identity enabled on VM — Identity blade showing Status On and Object ID](screenshots/01-managed-identity-enabled.png)
 
 ---
 
 ### Key Vault Provisioning
 
-An Azure Key Vault was provisioned with the Azure role-based access control permission model selected at creation. This authorization model cannot be changed after vault creation without reprovisioning the vault. A test secret was added to the vault to serve as the target resource for the managed identity retrieval validation.
+Azure Key Vault kv-idsentinel-azureuser was provisioned with the Azure role-based access control permission model selected at creation. This authorization model cannot be changed after vault creation without reprovisioning the vault. A test secret was added to the vault to serve as the target resource for the managed identity retrieval validation.
 
-![Key Vault created with RBAC authorization model — Access configuration tab showing Permission model set to Azure role-based access control](screenshots/SCN-14-02-keyvault-rbac-mode.png)
+![Key Vault Properties tab showing Permission model set to Azure role-based access control](screenshots/02-keyvault-rbac-mode.png)
 
 ---
 
 ### Break/Fix — Access Denied Before Role Assignment
 
-Before any role assignment was made, a PowerShell script was executed on the VM. The script called the IMDS endpoint to acquire a bearer token scoped to Key Vault, then attempted to retrieve the secret using that token. The request returned a 403 Forbidden response from Key Vault.
+Before any role assignment was made, a Python script was executed on IDS-NHI-VM via the Azure Serial Console. The script called the IMDS endpoint to acquire a bearer token scoped to Key Vault, then attempted to retrieve the secret using that token. The request returned a 403 Forbidden response from Key Vault.
 
 This break state confirms that token acquisition via IMDS succeeded — the managed identity authenticated correctly to Entra ID — but the authorization check at the vault failed because no role assignment existed for the principal. Authentication and authorization are independent controls. A valid Entra ID token does not confer access to a resource without a corresponding RBAC assignment on that resource.
 
-![PowerShell output showing 403 Forbidden on Key Vault secret retrieval before role assignment](screenshots/SCN-14-03-403-before-role-assignment.png)
+![Python script output showing token acquired successfully followed by HTTP 403 Forbidden on Key Vault secret retrieval before role assignment](screenshots/03-403-before-role-assignment.png)
 
 ---
 
@@ -80,39 +81,41 @@ This break state confirms that token acquisition via IMDS succeeded — the mana
 
 The Key Vault Secrets User role was assigned to the VM's managed identity principal in the Key Vault Access Control (IAM) blade. The assignment was scoped to the vault level. The built-in role grants Get and List operations on secret values only, with no write, delete, or management permissions and no access to keys or certificates in the same vault.
 
-![Key Vault Access Control (IAM) blade — Key Vault Secrets User role assigned to managed identity principal](screenshots/SCN-14-04-role-assignment.png)
+![Key Vault Access Control (IAM) blade — Key Vault Secrets User role assigned to managed identity principal](screenshots/04-role-assignment.png)
 
 ---
 
 ### Validation — Credential-Free Secret Retrieval
 
-After role assignment propagation, the same PowerShell script was executed a second time. The script called the IMDS endpoint, received a scoped bearer token, and presented it to Key Vault. The secret value was returned successfully. No client ID, client secret, certificate, or stored credential appeared anywhere in the script. The only authentication material was the short-lived token acquired at runtime from the IMDS endpoint — a token that is scoped to the target resource and never written to disk.
+After role assignment propagation, the same Python script was executed a second time on IDS-NHI-VM. The script called the IMDS endpoint, received a scoped bearer token, and presented it to Key Vault. The secret value was returned successfully. No client ID, client secret, certificate, or stored credential appeared anywhere in the script. The only authentication material was the short-lived token acquired at runtime from the IMDS endpoint — a token that is scoped to the target resource and never written to disk.
 
-![PowerShell output showing successful secret retrieval — managed identity token used with no credentials in script](screenshots/SCN-14-05-successful-retrieval.png)
+![Python script output showing token acquired successfully followed by HTTP 200 and masked secret value — no credentials present in script](screenshots/05-successful-retrieval.png)
 
 ---
 
 ### Audit Trail Validation
 
-Key Vault diagnostic settings were configured to forward AuditEvent logs to a Log Analytics workspace. A KQL query against the audit log confirmed the secret retrieval event, including the managed identity Object ID as the caller identity, the operation type (SecretGet), the HTTP status code (200), and the timestamp. This log entry provides the principal-level attribution that was missing under the static credential model.
+Key Vault diagnostic settings were configured to forward AuditEvent logs to Log Analytics workspace law-idsentinel-nhi. A KQL query against the AzureDiagnostics table confirmed the secret retrieval event, including the managed identity Object ID as the caller identity, the operation type (SecretGet), the HTTP status code (200), and the timestamp. This log entry provides the principal-level attribution that was missing under the static credential model.
 
-![Key Vault audit log — SecretGet event with managed identity Object ID as caller and HTTP 200 result](screenshots/SCN-14-06-keyvault-audit-log.png)
+![Log Analytics query results showing SecretGet event with managed identity Object ID as CallerIdentity and HTTP 200 result](screenshots/06-keyvault-audit-log.png)
 
 ---
 
 ### System-Assigned vs. User-Assigned Managed Identity
 
-A user-assigned managed identity was provisioned as a standalone Azure resource to document the lifecycle and use case distinction between the two identity types. The user-assigned identity was assigned to the VM and granted the same Key Vault Secrets User role. The key difference documented is that a user-assigned identity persists independently of any single resource — it can be assigned to multiple VMs simultaneously and survives VM deletion. This makes it the correct pattern when the same identity must span multiple resources in a scale set, or when an identity must survive a resource replacement such as a blue-green deployment where the replacement VM needs to inherit existing role assignments without a manual reassignment step.
+A user-assigned managed identity (id-idsentinel-shared) was provisioned as a standalone Azure resource to document the lifecycle and use case distinction between the two identity types. The user-assigned identity was assigned to IDS-NHI-VM to demonstrate that a single VM can carry both identity types simultaneously. The key difference documented is that a user-assigned identity persists independently of any single resource — it can be assigned to multiple VMs simultaneously and survives VM deletion. This makes it the correct pattern when the same identity must span multiple resources in a scale set, or when an identity must survive a resource replacement such as a blue-green deployment where the replacement VM needs to inherit existing role assignments without a manual reassignment step.
 
-![User-assigned managed identity resource in Azure portal — standalone Entra ID principal with independent lifecycle](screenshots/SCN-14-07-user-assigned-identity.png)
+![User-assigned managed identity id-idsentinel-shared in Azure portal — standalone Entra ID principal with independent lifecycle](screenshots/07-user-assigned-identity.png)
 
-![VM Identity blade showing both system-assigned and user-assigned identities configured](screenshots/SCN-14-08-both-identity-types.png)
+---
+
+![IDS-NHI-VM Identity blade showing user-assigned identity id-idsentinel-shared listed under the User assigned tab](screenshots/08-both-identity-types.png)
 
 ---
 
 ## ✅ Outcome
 
-Azure workloads at IDSentinel Solutions no longer require stored credentials to access Key Vault secrets. The managed identity token acquisition and secret retrieval flow was validated end-to-end, with break/fix evidence confirming that the authorization boundary is enforced at the vault RBAC layer independently of the workload code. Key Vault audit logs now provide a workload-attributable access trail for every secret retrieval event.
+Azure workloads at IDSentinel Solutions no longer require stored credentials to access Key Vault secrets. The managed identity token acquisition and secret retrieval flow was validated end-to-end on IDS-NHI-VM, with break/fix evidence confirming that the authorization boundary is enforced at the vault RBAC layer independently of the workload code. Key Vault audit logs now provide a workload-attributable access trail for every secret retrieval event.
 
 | Result | Detail |
 |---|---|
@@ -144,9 +147,9 @@ Azure workloads at IDSentinel Solutions no longer require stored credentials to 
 |---|---|
 | `README.md` | Scenario case study — business problem, solution design, implementation evidence, and outcome |
 | `implementation-guide.md` | Step-by-step build guide with screenshot callouts and configuration reference |
-| `scripts/Get-ManagedIdentityToken.ps1` | IMDS token acquisition and Key Vault secret retrieval — no stored credentials |
+| `scripts/get_token.py` | IMDS token acquisition and Key Vault secret retrieval via Python — no stored credentials |
 | `scripts/New-KeyVaultRoleAssignment.ps1` | Role assignment automation via Az PowerShell |
-| `scripts/Validate-ManagedIdentityAccess.ps1` | End-to-end validation script with structured output logging |
+| `scripts/Validate-ManagedIdentityAccess.ps1` | End-to-end configuration validation script |
 | `scripts/query-audit-log.kql` | KQL query for Log Analytics — surfaces managed identity secret access events |
 | `screenshots/SCREENSHOTS.md` | Screenshot index with filenames, capture stage, and evidence purpose |
 | `diagrams/DIAGRAMS.md` | Diagram index — IMDS token acquisition flow and cross-cloud NHI architecture |
