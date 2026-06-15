@@ -47,6 +47,8 @@ An Azure Key Vault is provisioned with the Azure role-based access control permi
 **Workstream 3 — Audit Trail and Lifecycle Validation**
 Key Vault diagnostic settings are configured to forward AuditEvent logs to a Log Analytics workspace. The audit log captures each secret retrieval event with the managed identity Object ID as the caller, the operation type, the HTTP status code, and a timestamp. This log record closes the audit gap that existed under the static credential model, where there was no way to attribute a Key Vault access event to a specific workload. Break/fix evidence is captured before and after the role assignment to demonstrate that the authorization boundary is enforced at the platform layer independently of the workload code.
 
+![Managed Non Human Identity Architecture Diagram](./diagrams/azure-managed-identity.png)
+
 ---
 
 ## 🔨 Implementation
