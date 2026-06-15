@@ -145,8 +145,6 @@ Azure workloads at IDSentinel Solutions no longer require stored credentials to 
 
 | File | Description |
 |---|---|
-| `README.md` | Scenario case study — business problem, solution design, implementation evidence, and outcome |
-| `implementation-guide.md` | Step-by-step build guide with screenshot callouts and configuration reference |
 | `scripts/get_token.py` | IMDS token acquisition and Key Vault secret retrieval via Python — no stored credentials |
 | `scripts/New-KeyVaultRoleAssignment.ps1` | Role assignment automation via Az PowerShell |
 | `scripts/Validate-ManagedIdentityAccess.ps1` | End-to-end configuration validation script |
