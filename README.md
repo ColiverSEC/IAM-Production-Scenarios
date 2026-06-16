@@ -45,6 +45,7 @@ Each scenario includes a business problem, solution design, implementation evide
 | 12 | [Entra ID + AWS SAML Federation](./12-entra-aws-saml-federation/) | AWS console access granted via IAM users with long-lived static credentials — violating Zero Trust mandate | SAML 2.0, Entra ID, AWS IAM, Federation, SAML Tracer, SOC 2 |
 | 13 | [SCIM Provisioning: Entra ID → AWS IAM Identity Center](./13-scim-provisioning-entra-aws/) | Manual AWS access provisioning creating 24-72hr delays and orphaned access for offboarded users | SCIM 2.0, Entra ID, AWS IAM Identity Center, JML Lifecycle, PowerShell, SOC 2 |
 | 14 | [Securing Non-Human Identities: Azure Managed Identity](./14-azure-managed-identity/) | Azure workloads using stored service principal secrets with no credential binding, no rotation enforcement, and no per-operation audit trail | Azure Managed Identity, IMDS, Key Vault RBAC, Python, Log Analytics, SOC 2 |
+| 15 | [AI Agent Identity Governance](./15-ai-agent-identity-governance/) | Internal AI assistant granted broad admin-scoped token with no audit trail, no least-privilege scoping, and no decommission procedure — indistinguishable from a compromised service account | Entra App Registration, OAuth2 Client Credentials, Graph API, JWT Validation, Splunk HEC, LLM Tool Use, SOC 2 |
 
 ---
 
@@ -71,18 +72,18 @@ Every scenario folder follows this format:
 | Privileged Access Management (PIM) | 04, 10 |
 | Zero Trust Architecture | 04 |
 | PowerShell & Graph API Automation | 03, 04, 06, 07, 10, 11, 13 |
-| OAuth2 / OIDC / JWT | 06, 08 |
+| OAuth2 / OIDC / JWT | 06, 08, 15 |
 | CIAM & Customer Identity | 08 |
 | Social Identity Federation | 08 |
-| API Protection with Bearer Tokens | 06, 08 |
+| API Protection with Bearer Tokens | 06, 08, 15 |
 | Terraform / Policy-as-Code | 04 |
 | Identity Lifecycle / JML | 03, 05, 13 |
 | Okta Workflows — JML Automation | 05 |
 | Incident Response (P1/P2 Runbooks) | 07 |
-| SIEM Integration & Log Pipeline | 10 |
-| Threat Detection & SPL | 10 |
+| SIEM Integration & Log Pipeline | 10, 15 |
+| Threat Detection & SPL | 10, 15 |
 | MITRE ATT&CK Mapping | 07, 10 |
-| SOC 2 Audit Evidence | 03, 05, 07, 10, 11, 12, 13, 14 |
+| SOC 2 Audit Evidence | 03, 05, 07, 10, 11, 12, 13, 14, 15 |
 | AWS IAM & Role Assumption | 09 |
 | SAML / SSO Federation | 02, 12 |
 | SAML Troubleshooting & Break/Fix | 02, 12 |
@@ -92,10 +93,12 @@ Every scenario folder follows this format:
 | SCIM Provisioning | 13 |
 | AWS IAM Identity Center | 12, 13 |
 | Hybrid Identity (AD + Entra + Okta) | 02, 05, 11, 13 |
-| Non-Human Identity (NHI) | 09, 14 |
+| Non-Human Identity (NHI) | 09, 14, 15 |
 | Azure Managed Identity & IMDS | 14 |
 | Azure Key Vault RBAC | 14 |
-| Workload Identity & Zero Stored Credentials | 09, 14 |
+| Workload Identity & Zero Stored Credentials | 09, 14, 15 |
+| AI Agent Identity & Governance | 15 |
+| LLM Tool Use / Anthropic API Integration | 15 |
 
 ---
 
